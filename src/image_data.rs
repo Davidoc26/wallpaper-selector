@@ -21,7 +21,7 @@ mod imp {
 
     #[glib::object_subclass]
     impl ObjectSubclass for ImageData {
-        const NAME: &'static str = "WallpaperSelectorImageData";
+        const NAME: &'static str = "ImageData";
         type Type = super::ImageData;
     }
 
