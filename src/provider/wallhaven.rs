@@ -65,7 +65,7 @@ impl Wallhaven {
         format!("{}/{}", std::env::var("XDG_DATA_HOME").unwrap(), id)
     }
 
-    pub async fn load_images(&self, sender: &Sender<(String, Texture)>) {
+    pub async fn load_images(&self, sender: &Sender<ProviderMessage>) {
         let page = *self.page.lock().unwrap();
         self.increment_page();
 
@@ -85,7 +85,13 @@ impl Wallhaven {
             let bytes = Bytes::from(&bytes);
             let texture = Texture::from_bytes(&bytes).unwrap();
 
-            sender.send((image.get_path(), texture)).unwrap();
+            sender
+                .send(ProviderMessage::Image(image.get_path(), texture))
+                .unwrap();
         }
     }
+}
+
+pub enum ProviderMessage {
+    Image(String, Texture),
 }

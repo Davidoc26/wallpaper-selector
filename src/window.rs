@@ -19,7 +19,7 @@ use crate::application::WallpaperSelectorApplication;
 use crate::config::{APP_ID, PROFILE};
 use crate::core::desktop;
 use crate::image_data::ImageData;
-use crate::provider::wallhaven::Wallhaven;
+use crate::provider::wallhaven::{ProviderMessage, Wallhaven};
 use crate::RUNTIME;
 
 mod imp {
@@ -120,7 +120,7 @@ impl WallpaperSelectorWindow {
                 .build(),
         );
         let client = crate::api::wallhaven::client::Client::new(None);
-        let (sender, receiver) = MainContext::channel(glib::PRIORITY_DEFAULT);
+        let (sender, receiver) = MainContext::channel::<ProviderMessage>(glib::PRIORITY_DEFAULT);
         let sender = Arc::new(sender);
 
         let desktop = desktop::initialize(&env::var("XDG_CURRENT_DESKTOP").unwrap_or_default())
@@ -157,9 +157,13 @@ impl WallpaperSelectorWindow {
             provider.load_images(&sender).await;
         }));
 
-        receiver.attach(None, move |(path, texture)| {
-            let image_data = ImageData::new(path, texture);
-            model.append(&image_data);
+        receiver.attach(None, move |message| {
+            match message {
+                ProviderMessage::Image(path, texture) => {
+                    let image_data = ImageData::new(path, texture);
+                    model.append(&image_data);
+                }
+            }
 
             Continue(true)
         });
