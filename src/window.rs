@@ -163,6 +163,9 @@ impl WallpaperSelectorWindow {
                     let image_data = ImageData::new(path, texture);
                     model.append(&image_data);
                 }
+                ProviderMessage::Reset => {
+                    model.remove_all();
+                }
             }
 
             Continue(true)

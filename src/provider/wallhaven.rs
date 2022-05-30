@@ -11,10 +11,15 @@ use crate::api::wallhaven::client::Client;
 use crate::api::wallhaven::response::ThumbType;
 use crate::core::desktop::DesktopEnvironment;
 
+// Load only 15 pages, then clear GridView
+const IMAGE_PER_PAGE: u16 = 24;
+const MAX_IMAGE_COUNT: u16 = IMAGE_PER_PAGE * 15;
+
 pub struct Wallhaven {
     client: Arc<Client>,
     page: Arc<Mutex<u32>>,
     desktop: Arc<Mutex<Box<dyn DesktopEnvironment + Send>>>,
+    image_count: Arc<Mutex<u16>>,
 }
 
 impl Wallhaven {
@@ -23,12 +28,25 @@ impl Wallhaven {
             client: Arc::new(client),
             page: Arc::new(Mutex::new(1)),
             desktop: Arc::new(Mutex::new(desktop)),
+            image_count: Arc::new(Mutex::new(0)),
         }
     }
 
     fn increment_page(&self) {
         let mut page = self.page.lock().unwrap();
         *page += 1;
+    }
+
+    fn increment_image_count(&self) {
+        *self.image_count.lock().unwrap() += 1;
+    }
+
+    fn reset_image_count(&self) {
+        *self.image_count.lock().unwrap() = 0;
+    }
+
+    fn reached_max_image_count(&self) -> bool {
+        *self.image_count.lock().unwrap() == MAX_IMAGE_COUNT
     }
 
     pub async fn set_wallpaper(&self, url: String) -> Result<(), Box<dyn Error + Send + Sync>> {
@@ -85,13 +103,21 @@ impl Wallhaven {
             let bytes = Bytes::from(&bytes);
             let texture = Texture::from_bytes(&bytes).unwrap();
 
+            if self.reached_max_image_count() {
+                sender.send(ProviderMessage::Reset).unwrap();
+                self.reset_image_count();
+            }
+
             sender
                 .send(ProviderMessage::Image(image.get_path(), texture))
                 .unwrap();
+
+            self.increment_image_count();
         }
     }
 }
 
 pub enum ProviderMessage {
     Image(String, Texture),
+    Reset,
 }
