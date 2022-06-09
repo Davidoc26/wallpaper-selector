@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- David Eritsyan 2019 <dav.eritsyan@gmail.com> -->
+<!-- David Eritsyan 2022 <dav.eritsyan@gmail.com> -->
 <component type="desktop-application">
   <id>@app-id@</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
   <name>Wallpaper Selector</name>
-  <summary>Downloads and applies wallpaper</summary>
+  <summary>Downloads and applies wallpapers</summary>
   <description>
     <p>Simple application to download and set wallpapers from wallhaven</p>
   </description>
@@ -14,7 +14,7 @@
   </keywords>
   <screenshots>
     <screenshot type="default">
-      <image>https://github.com/davidoc26/wallpaper-selector/raw/master/data/resources/screenshots/screenshot1.png</image>
+      <image>https://raw.githubusercontent.com/Davidoc26/wallpaper-selector/main/data/resources/screenshots/screenshot1.png</image>
       <caption>Main window</caption>
     </screenshot>
   </screenshots>
@@ -22,7 +22,11 @@
   <url type="bugtracker">https://github.com/davidoc26/wallpaper-selector/issues</url>
   <content_rating type="oars-1.0" />
   <releases>
-    <release version="0.1.0" date="2022-05-27"/>
+    <release version="0.1.0" date="2022-06-09">
+      <description>
+        <p>First release! Supports only gnome now</p>
+      </description>
+    </release>
   </releases>
   <kudos>
      <kudo>ModernToolkit</kudo>
