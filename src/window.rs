@@ -219,10 +219,18 @@ impl WallpaperSelectorWindow {
                                         ashpd::Error::Response(e) => {
                                             match e {
                                                 ResponseError::Cancelled => {}
-                                                ResponseError::Other => ashpd::desktop::open_uri::open_directory(&identifier, &file).await.unwrap(),
+                                                ResponseError::Other => {
+                                                    if let Err(_) = ashpd::desktop::open_uri::open_directory(&identifier, &file).await {
+                                                        window.send_toast("Something went wrong", Some(3));
+                                                    };
+                                                },
                                             }
                                         }
-                                        _ => ashpd::desktop::open_uri::open_directory(&identifier, &file).await.unwrap(),
+                                        _ => {
+                                            if let Err(_) = ashpd::desktop::open_uri::open_directory(&identifier, &file).await {
+                                                window.send_toast("Something went wrong", Some(3));
+                                            };
+                                        }
                                     }
                                 },
                             };
