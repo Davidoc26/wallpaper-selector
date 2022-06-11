@@ -22,6 +22,11 @@
   <url type="bugtracker">https://github.com/davidoc26/wallpaper-selector/issues</url>
   <content_rating type="oars-1.0" />
   <releases>
+    <release version="0.2.0" date="2022-06-11">
+      <description>
+        <p>Removed flatpak d-bus access, uses portals instead</p>
+      </description>
+    </release>
     <release version="0.1.0" date="2022-06-09">
       <description>
         <p>First release! Supports only gnome now</p>
