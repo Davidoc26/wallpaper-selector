@@ -1,5 +1,5 @@
-use std::env;
 use std::error::Error;
+use std::fs::File;
 use std::sync::Arc;
 
 use adw::gdk::Texture;
@@ -8,16 +8,15 @@ use adw::glib::clone;
 use adw::glib::MainContext;
 use adw::Toast;
 use adw::{gio, glib};
+use ashpd::desktop::wallpaper::SetOn;
+use ashpd::desktop::ResponseError;
+use ashpd::WindowIdentifier;
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
-use gtk::{
-    ButtonsType, GridView, Image, MessageDialog, MessageType, PositionType, ScrolledWindow,
-    SignalListItemFactory, SingleSelection,
-};
+use gtk::{GridView, Image, PositionType, ScrolledWindow, SignalListItemFactory, SingleSelection};
 
 use crate::application::WallpaperSelectorApplication;
 use crate::config::{APP_ID, PROFILE};
-use crate::core::desktop;
 use crate::image_data::ImageData;
 use crate::provider::wallhaven::{ProviderMessage, Wallhaven};
 use crate::RUNTIME;
@@ -123,31 +122,7 @@ impl WallpaperSelectorWindow {
         let (sender, receiver) = MainContext::channel::<ProviderMessage>(glib::PRIORITY_DEFAULT);
         let sender = Arc::new(sender);
 
-        let desktop = desktop::initialize(&env::var("XDG_CURRENT_DESKTOP").unwrap_or_default())
-            .unwrap_or_else(|e| {
-                let dialog = MessageDialog::builder()
-                    .transient_for(self)
-                    .modal(true)
-                    .message_type(MessageType::Error)
-                    .buttons(ButtonsType::Ok)
-                    .text(&e.to_string())
-                    .destroy_with_parent(false)
-                    .build();
-
-                MainContext::default().block_on(async move {
-                    dialog.run_future().await;
-                    dialog.close();
-                });
-
-                let app = self.application().unwrap();
-                self.close();
-                app.quit();
-
-                Default::default()
-            });
-
-        let provider = Arc::new(crate::provider::wallhaven::Wallhaven::new(client, desktop));
-
+        let provider = Arc::new(Wallhaven::new(client));
         let selection_model = SingleSelection::new(Some(&*model));
 
         let grid_view = self.prepare_grid_view(Arc::clone(&provider), selection_model);
@@ -220,16 +195,39 @@ impl WallpaperSelectorWindow {
 
             let url = image_data.property::<String>("path");
 
-            let (sender, receiver) = MainContext::channel::<Result<(), Box<dyn Error + Send + Sync>>>(glib::PRIORITY_DEFAULT);
+            let (sender, receiver) = MainContext::channel::<Result<String, Box<dyn Error + Send + Sync>>>(glib::PRIORITY_DEFAULT);
             window.send_toast("Downloading your new wallpaper 🙂", Some(2));
             RUNTIME.spawn(clone!(@strong provider => async move{
-                let result = provider.set_wallpaper(url.to_string()).await;
-                sender.send(result)
+                let path = provider.download_wallpaper(url.to_string()).await;
+                sender.send(path).unwrap();
             }));
 
             receiver.attach(None,clone!(@strong window => move |result| {
                 match result{
-                    Ok(_) => window.send_toast("Enjoy 🤘", Some(3)),
+                    Ok(path) => {
+                        MainContext::default().spawn_local(clone!(@strong window => async move {
+                            let root = window.native().unwrap();
+                            let identifier = WindowIdentifier::from_native(&root).await;
+                            let file = File::open(path).unwrap();
+
+                            let result = ashpd::desktop::wallpaper::set_from_file(&identifier, &file, true, SetOn::Background).await;
+
+                            match result {
+                                Ok(_) => window.send_toast("Enjoy 🤘", Some(3)),
+                                Err(e) => {
+                                    match e {
+                                        ashpd::Error::Response(e) => {
+                                            match e {
+                                                ResponseError::Cancelled => {}
+                                                ResponseError::Other => ashpd::desktop::open_uri::open_directory(&identifier, &file).await.unwrap(),
+                                            }
+                                        }
+                                        _ => ashpd::desktop::open_uri::open_directory(&identifier, &file).await.unwrap(),
+                                    }
+                                },
+                            };
+                        }));
+                    },
                     Err(e) => window.send_toast(&e.to_string(), Some(3)),
                 }
 

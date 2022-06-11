@@ -10,7 +10,6 @@ mod application;
 #[rustfmt::skip]
 mod config;
 mod api;
-mod core;
 mod image_data;
 mod provider;
 mod window;

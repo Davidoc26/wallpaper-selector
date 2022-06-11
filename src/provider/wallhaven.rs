@@ -9,7 +9,6 @@ use adw::prelude::TextureExt;
 
 use crate::api::wallhaven::client::Client;
 use crate::api::wallhaven::response::ThumbType;
-use crate::core::desktop::DesktopEnvironment;
 
 // Load only 15 pages, then clear GridView
 const IMAGE_PER_PAGE: u16 = 24;
@@ -18,16 +17,14 @@ const MAX_IMAGE_COUNT: u16 = IMAGE_PER_PAGE * 15;
 pub struct Wallhaven {
     client: Arc<Client>,
     page: Arc<Mutex<u32>>,
-    desktop: Arc<Mutex<Box<dyn DesktopEnvironment + Send>>>,
     image_count: Arc<Mutex<u16>>,
 }
 
 impl Wallhaven {
-    pub fn new(client: Client, desktop: Box<dyn DesktopEnvironment + Send>) -> Self {
+    pub fn new(client: Client) -> Self {
         Self {
             client: Arc::new(client),
             page: Arc::new(Mutex::new(1)),
-            desktop: Arc::new(Mutex::new(desktop)),
             image_count: Arc::new(Mutex::new(0)),
         }
     }
@@ -49,7 +46,10 @@ impl Wallhaven {
         *self.image_count.lock().unwrap() == MAX_IMAGE_COUNT
     }
 
-    pub async fn set_wallpaper(&self, url: String) -> Result<(), Box<dyn Error + Send + Sync>> {
+    pub async fn download_wallpaper(
+        &self,
+        url: String,
+    ) -> Result<String, Box<dyn Error + Send + Sync>> {
         let bytes = self.client.get_bytes(&url).await?;
         let bytes = Bytes::from(&bytes);
 
@@ -57,9 +57,7 @@ impl Wallhaven {
         let save_path = self.parse_url(&url);
         self.save_texture(&texture, Path::new(&save_path)).await?;
 
-        self.desktop.lock().unwrap().set_wallpaper(&save_path)?;
-
-        Ok(())
+        Ok(save_path)
     }
 
     async fn save_texture(
