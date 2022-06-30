@@ -68,11 +68,11 @@ pub mod client {
     }
 
     impl Category {
-        pub fn value(&self) -> i32 {
+        pub fn value(&self) -> &str {
             match self {
-                Category::General => 100,
-                Category::Anime => 101,
-                Category::People => 111,
+                Category::General => "100",
+                Category::Anime => "010",
+                Category::People => "001",
             }
         }
     }
