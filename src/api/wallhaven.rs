@@ -76,6 +76,17 @@ pub mod client {
             }
         }
     }
+
+    impl From<i32> for Category {
+        fn from(pos: i32) -> Self {
+            match pos {
+                0 => Category::General,
+                1 => Category::Anime,
+                2 => Category::People,
+                _ => Self::default(),
+            }
+        }
+    }
 }
 
 pub mod response {

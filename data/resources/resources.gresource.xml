@@ -3,6 +3,7 @@
   <gresource prefix="/io/github/davidoc26/wallpaper_selector/">
     <file compressed="true" preprocess="xml-stripblanks" alias="gtk/help-overlay.ui">ui/shortcuts.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/window.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">ui/preferences.ui</file>
     <file compressed="true">style.css</file>
   </gresource>
 </gresources>

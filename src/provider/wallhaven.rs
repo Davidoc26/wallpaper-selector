@@ -5,9 +5,9 @@ use std::sync::{Arc, Mutex};
 use adw::gdk::Texture;
 use adw::glib;
 use adw::glib::{Bytes, Sender};
-use adw::prelude::TextureExt;
+use adw::prelude::*;
 
-use crate::api::wallhaven::client::Client;
+use crate::api::wallhaven::client::{Category, Client};
 use crate::api::wallhaven::response::ThumbType;
 
 // Load only 15 pages, then clear GridView
@@ -81,13 +81,13 @@ impl Wallhaven {
         format!("{}/{}", std::env::var("XDG_DATA_HOME").unwrap(), id)
     }
 
-    pub async fn load_images(&self, sender: &Sender<ProviderMessage>) {
+    pub async fn load_images(&self, sender: &Sender<ProviderMessage>, category: Category) {
         let page = *self.page.lock().unwrap();
         self.increment_page();
 
         let images = self
             .client
-            .search(Some(page), None)
+            .search(Some(page), Some(category))
             .await
             .unwrap()
             .get_images();

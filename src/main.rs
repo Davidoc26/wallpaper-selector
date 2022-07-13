@@ -12,6 +12,7 @@ mod config;
 mod api;
 mod image_data;
 mod provider;
+mod widgets;
 mod window;
 
 static RUNTIME: Lazy<Runtime> = Lazy::new(|| Runtime::new().unwrap());

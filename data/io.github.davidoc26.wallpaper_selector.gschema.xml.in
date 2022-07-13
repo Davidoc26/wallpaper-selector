@@ -13,5 +13,9 @@
       <default>false</default>
       <summary>Window maximized state</summary>
     </key>
+    <key name="category" type="i">
+      <default>0</default>
+      <summary>Wallpapers category</summary>
+    </key>
   </schema>
 </schemalist>

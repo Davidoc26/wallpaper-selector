@@ -6,6 +6,7 @@ use gtk::{gdk, gio, glib};
 use log::{debug, info};
 
 use crate::config::{APP_ID, PKGDATADIR, PROFILE, VERSION};
+use crate::widgets::PreferencesWindow;
 use crate::window::WallpaperSelectorWindow;
 
 mod imp {
@@ -109,11 +110,26 @@ impl WallpaperSelectorApplication {
             app.show_about_dialog();
         }));
         self.add_action(&action_about);
+
+        // Preferences
+        let action_preferences = gio::SimpleAction::new("preferences", None);
+        action_preferences.connect_activate(clone!(@weak self as app => move |_,_|{
+            app.show_preferences_window();
+        }));
+        self.add_action(&action_preferences);
+    }
+
+    fn show_preferences_window(&self) {
+        let preferences = PreferencesWindow::new();
+        preferences.set_transient_for(Some(&self.main_window()));
+
+        preferences.present();
     }
 
     // Sets up keyboard shortcuts
     fn setup_accels(&self) {
         self.set_accels_for_action("app.quit", &["<Control>q"]);
+        self.set_accels_for_action("app.preferences", &["<primary>comma"]);
     }
 
     fn setup_css(&self) {

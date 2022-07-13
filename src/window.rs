@@ -15,6 +15,7 @@ use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 use gtk::{GridView, Image, PositionType, ScrolledWindow, SignalListItemFactory, SingleSelection};
 
+use crate::api::wallhaven::client::Category;
 use crate::application::WallpaperSelectorApplication;
 use crate::config::{APP_ID, PROFILE};
 use crate::image_data::ImageData;
@@ -126,10 +127,11 @@ impl WallpaperSelectorWindow {
         let selection_model = SingleSelection::new(Some(&*model));
 
         let grid_view = self.prepare_grid_view(Arc::clone(&provider), selection_model);
+        let category = self.current_category();
 
         RUNTIME.spawn(clone!(@strong provider, @strong sender => async move {
             let sender = &sender;
-            provider.load_images(&sender).await;
+            provider.load_images(&sender, category).await;
         }));
 
         receiver.attach(None, move |message| {
@@ -153,17 +155,22 @@ impl WallpaperSelectorWindow {
             .build();
 
         scrolled_window.connect_edge_reached(
-            clone!(@strong provider, @strong sender => move|_window,position|{
+            clone!(@strong provider, @strong sender, @strong self as window => move|_window,position|{
+                let category = window.current_category();
                 if let PositionType::Bottom = position {
-                    RUNTIME.spawn(clone!(@strong provider, @strong sender => async move{
+                    RUNTIME.spawn(clone!(@strong provider, @strong sender, @strong window => async move{
                         let sender = &sender;
-                        provider.load_images(&sender).await;
+                        provider.load_images(&sender, category).await;
                     }));
                 }
             }),
         );
 
         self.imp().main_box.append(&scrolled_window);
+    }
+
+    fn current_category(&self) -> Category {
+        Category::from(self.imp().settings.int("category"))
     }
 
     fn save_window_size(&self) -> Result<(), glib::BoolError> {
