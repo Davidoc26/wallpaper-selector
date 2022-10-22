@@ -51,7 +51,7 @@ pub mod client {
         }
 
         pub async fn get_bytes(&self, path: &str) -> Result<Bytes, reqwest::Error> {
-            Ok(self.client.get(path).send().await?.bytes().await?)
+            self.client.get(path).send().await?.bytes().await
         }
     }
 
@@ -125,9 +125,9 @@ pub mod response {
 
         pub fn thumb_url(&self, thumb: ThumbType) -> &String {
             return match thumb {
-                ThumbType::Large => &self.thumbs.get("large").unwrap(),
-                ThumbType::Original => &self.thumbs.get("original").unwrap(),
-                ThumbType::Small => &self.thumbs.get("small").unwrap(),
+                ThumbType::Large => self.thumbs.get("large").unwrap(),
+                ThumbType::Original => self.thumbs.get("original").unwrap(),
+                ThumbType::Small => self.thumbs.get("small").unwrap(),
             };
         }
     }

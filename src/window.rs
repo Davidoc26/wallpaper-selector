@@ -13,10 +13,7 @@ use ashpd::desktop::ResponseError;
 use ashpd::WindowIdentifier;
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
-use gtk::{
-    Adjustment, CornerType, GridView, Image, PositionType, ScrolledWindow, SignalListItemFactory,
-    SingleSelection,
-};
+use gtk::{GridView, Image, PositionType, ScrolledWindow, SignalListItemFactory, SingleSelection};
 
 use crate::api::wallhaven::client::{Category, Client};
 use crate::application::WallpaperSelectorApplication;
@@ -241,14 +238,14 @@ impl WallpaperSelectorWindow {
                                             match e {
                                                 ResponseError::Cancelled => {}
                                                 ResponseError::Other => {
-                                                    if let Err(_) = ashpd::desktop::open_uri::open_directory(&identifier, &file).await {
+                                                    if ashpd::desktop::open_uri::open_directory(&identifier, &file).await.is_err() {
                                                         window.send_toast("Something went wrong", Some(3));
                                                     };
                                                 },
                                             }
                                         }
                                         _ => {
-                                            if let Err(_) = ashpd::desktop::open_uri::open_directory(&identifier, &file).await {
+                                            if ashpd::desktop::open_uri::open_directory(&identifier, &file).await.is_err() {
                                                 window.send_toast("Something went wrong", Some(3));
                                             };
                                         }

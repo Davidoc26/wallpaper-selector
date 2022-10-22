@@ -78,3 +78,9 @@ impl PreferencesWindow {
             .build();
     }
 }
+
+impl Default for PreferencesWindow {
+    fn default() -> Self {
+        Self::new()
+    }
+}

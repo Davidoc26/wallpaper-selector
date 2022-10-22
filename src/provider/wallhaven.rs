@@ -81,7 +81,7 @@ impl Wallhaven {
 
     fn parse_url(&self, url: &str) -> String {
         let id = url
-            .split("/")
+            .split('/')
             .collect::<Vec<&str>>()
             .last()
             .copied()

@@ -167,3 +167,9 @@ impl WallpaperSelectorApplication {
         ApplicationExtManual::run(self);
     }
 }
+
+impl Default for WallpaperSelectorApplication {
+    fn default() -> Self {
+        Self::new()
+    }
+}
