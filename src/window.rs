@@ -13,11 +13,15 @@ use ashpd::desktop::ResponseError;
 use ashpd::WindowIdentifier;
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
-use gtk::{GridView, Image, PositionType, ScrolledWindow, SignalListItemFactory, SingleSelection};
+use gtk::{
+    Adjustment, CornerType, GridView, Image, PositionType, ScrolledWindow, SignalListItemFactory,
+    SingleSelection,
+};
 
-use crate::api::wallhaven::client::Category;
+use crate::api::wallhaven::client::{Category, Client};
 use crate::application::WallpaperSelectorApplication;
 use crate::config::{APP_ID, PROFILE};
+use crate::glib::Sender;
 use crate::image_data::ImageData;
 use crate::provider::wallhaven::{ProviderMessage, Wallhaven};
 use crate::RUNTIME;
@@ -113,13 +117,21 @@ impl WallpaperSelectorWindow {
             .expect("Failed to create WallpaperSelectorWindow")
     }
 
+    fn load(&self, provider: Arc<Wallhaven>, sender: Arc<Sender<ProviderMessage>>) {
+        let category = self.current_category();
+
+        RUNTIME.spawn(async move {
+            provider.load_images(&sender, category).await;
+        });
+    }
+
     pub fn build_grid(&self) {
         let model: Arc<ListStore> = Arc::new(
             ListStore::builder()
                 .item_type(ImageData::static_type())
                 .build(),
         );
-        let client = crate::api::wallhaven::client::Client::new(None);
+        let client = Client::new(None);
         let (sender, receiver) = MainContext::channel::<ProviderMessage>(glib::PRIORITY_DEFAULT);
         let sender = Arc::new(sender);
 
@@ -127,26 +139,32 @@ impl WallpaperSelectorWindow {
         let selection_model = SingleSelection::new(Some(&*model));
 
         let grid_view = self.prepare_grid_view(Arc::clone(&provider), selection_model);
-        let category = self.current_category();
 
-        RUNTIME.spawn(clone!(@strong provider, @strong sender => async move {
-            let sender = &sender;
-            provider.load_images(&sender, category).await;
+        self.load(Arc::clone(&provider), Arc::clone(&sender));
+
+        receiver.attach(
+            None,
+            clone!(@strong model => move|message| {
+                match message {
+                    ProviderMessage::Image(path, texture) => {
+                        let image_data = ImageData::new(path, texture);
+                        model.append(&image_data);
+                    }
+                    ProviderMessage::Reset => {
+                        model.remove_all();
+                    }
+                }
+
+                Continue(true)
+            }),
+        );
+
+        // Reset grid on category change (needs refactoring)
+        self.imp().settings.connect_changed(Some("category"), clone!(@strong model, @strong self as window, @strong provider, @strong sender =>  move|_, _| {
+            provider.reset();
+            model.remove_all();
+            window.load(Arc::clone(&provider), Arc::clone(&sender));
         }));
-
-        receiver.attach(None, move |message| {
-            match message {
-                ProviderMessage::Image(path, texture) => {
-                    let image_data = ImageData::new(path, texture);
-                    model.append(&image_data);
-                }
-                ProviderMessage::Reset => {
-                    model.remove_all();
-                }
-            }
-
-            Continue(true)
-        });
 
         let scrolled_window = ScrolledWindow::builder()
             .hexpand(false)
@@ -155,13 +173,9 @@ impl WallpaperSelectorWindow {
             .build();
 
         scrolled_window.connect_edge_reached(
-            clone!(@strong provider, @strong sender, @strong self as window => move|_window,position|{
-                let category = window.current_category();
+            clone!(@strong provider, @strong sender, @strong self as window => move|_,position|{
                 if let PositionType::Bottom = position {
-                    RUNTIME.spawn(clone!(@strong provider, @strong sender, @strong window => async move{
-                        let sender = &sender;
-                        provider.load_images(&sender, category).await;
-                    }));
+                    window.load(Arc::clone(&provider), Arc::clone(&sender));
                 }
             }),
         );

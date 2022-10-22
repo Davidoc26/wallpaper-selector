@@ -38,6 +38,15 @@ impl Wallhaven {
         *self.image_count.lock().unwrap() += 1;
     }
 
+    pub fn reset(&self) {
+        self.reset_page();
+        self.reset_image_count();
+    }
+
+    fn reset_page(&self) {
+        *self.page.lock().unwrap() = 1;
+    }
+
     fn reset_image_count(&self) {
         *self.image_count.lock().unwrap() = 0;
     }
