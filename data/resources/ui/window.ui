@@ -30,6 +30,7 @@
                 <child type="end">
                   <object class="GtkMenuButton">
                     <property name="menu-model">primary_menu</property>
+                    <property name="icon-name">open-menu-symbolic</property>
                   </object>
                 </child>
             </object>
