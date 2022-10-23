@@ -22,6 +22,11 @@
   <url type="bugtracker">https://github.com/davidoc26/wallpaper-selector/issues</url>
   <content_rating type="oars-1.0" />
   <releases>
+    <release version="0.3.1" date="2022-10-23">
+      <description>
+        <p>Small correction: window refresh after category selection</p>
+      </description>
+    </release>
     <release version="0.3.0" date="2022-07-17">
       <description>
         <p>Added preferences window and the ability to choose a wallpaper category</p>

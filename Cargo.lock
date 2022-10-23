@@ -1991,7 +1991,7 @@ checksum = "9d5b2c62b4012a3e1eca5a7e077d13b3bf498c4073e33ccd58626607748ceeca"
 
 [[package]]
 name = "wallpaper-selector"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "ashpd",
  "bytes",
