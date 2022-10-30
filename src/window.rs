@@ -11,6 +11,7 @@ use adw::{gio, glib};
 use ashpd::desktop::wallpaper::SetOn;
 use ashpd::desktop::ResponseError;
 use ashpd::WindowIdentifier;
+use gettextrs::gettext;
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 use gtk::{GridView, Image, PositionType, ScrolledWindow, SignalListItemFactory, SingleSelection};
@@ -214,7 +215,7 @@ impl WallpaperSelectorWindow {
             let url = image_data.property::<String>("path");
 
             let (sender, receiver) = MainContext::channel::<Result<String, Box<dyn Error + Send + Sync>>>(glib::PRIORITY_DEFAULT);
-            window.send_toast("Downloading your new wallpaper 🙂", Some(2));
+            window.send_toast(&gettext("Downloading your new wallpaper 🙂"), Some(2));
             RUNTIME.spawn(clone!(@strong provider => async move{
                 let path = provider.download_wallpaper(url.to_string()).await;
                 sender.send(path).unwrap();
@@ -231,7 +232,7 @@ impl WallpaperSelectorWindow {
                             let result = ashpd::desktop::wallpaper::set_from_file(&identifier, &file, true, SetOn::Background).await;
 
                             match result {
-                                Ok(_) => window.send_toast("Enjoy 🤘", Some(3)),
+                                Ok(_) => window.send_toast(&gettext("Enjoy 🤘"), Some(3)),
                                 Err(e) => {
                                     match e {
                                         ashpd::Error::Response(e) => {
@@ -239,14 +240,14 @@ impl WallpaperSelectorWindow {
                                                 ResponseError::Cancelled => {}
                                                 ResponseError::Other => {
                                                     if ashpd::desktop::open_uri::open_directory(&identifier, &file).await.is_err() {
-                                                        window.send_toast("Something went wrong", Some(3));
+                                                        window.send_toast(&gettext("Something went wrong"), Some(3));
                                                     };
                                                 },
                                             }
                                         }
                                         _ => {
                                             if ashpd::desktop::open_uri::open_directory(&identifier, &file).await.is_err() {
-                                                window.send_toast("Something went wrong", Some(3));
+                                                window.send_toast(&gettext("Something went wrong"), Some(3));
                                             };
                                         }
                                     }
