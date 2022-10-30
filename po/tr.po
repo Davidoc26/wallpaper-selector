@@ -1,0 +1,144 @@
+# Turkish translation for io.github.davidoc26.wallpaper_selector.
+# Copyright (C) 2022 io.github.davidoc26.wallpaper_selector's COPYRIGHT HOLDER
+# This file is distributed under the same license as the io.github.davidoc26.wallpaper_selector package.
+#
+# Sabri Ünal <libreajans@gmail.com>, 2022.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: io.github.davidoc26.wallpaper_selector\n"
+"Report-Msgid-Bugs-To: https://github.com/davidoc26/wallpaper-selector\n"
+"POT-Creation-Date: 2022-10-23 16:53+0300\n"
+"PO-Revision-Date: 2022-10-23 18:11+0300\n"
+"Last-Translator: Sabri Ünal <libreajans@gmail.com>\n"
+"Language-Team: Türkçe <gnome-turk@gnome.org>\n"
+"Language: tr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 3.1.1\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-KeywordsList: NC_;G_;_;C_;gettext\n"
+"X-Poedit-SearchPath-0: src\n"
+"X-Poedit-SearchPath-1: data\n"
+
+#: data/io.github.davidoc26.wallpaper_selector.desktop.in.in:3
+#: data/io.github.davidoc26.wallpaper_selector.metainfo.xml.in.in:7
+msgid "Wallpaper Selector"
+msgstr "Duvar Kağıdı Seçici"
+
+#: data/io.github.davidoc26.wallpaper_selector.desktop.in.in:4
+msgid "Simple application to download and set wallpapers"
+msgstr "Duvar kağıtlarını indirmek ve kurmak için basit bir uygulama"
+
+#: data/io.github.davidoc26.wallpaper_selector.desktop.in.in:9
+msgid "Gnome;GTK;"
+msgstr "Gnome;GTK;"
+
+#: data/io.github.davidoc26.wallpaper_selector.gschema.xml.in:6
+msgid "Window width"
+msgstr "Pencere genişliği"
+
+#: data/io.github.davidoc26.wallpaper_selector.gschema.xml.in:10
+msgid "Window height"
+msgstr "Pencere yüksekliği"
+
+#: data/io.github.davidoc26.wallpaper_selector.gschema.xml.in:14
+msgid "Window maximized state"
+msgstr "Pencerenin büyütülme durumu"
+
+#: data/io.github.davidoc26.wallpaper_selector.gschema.xml.in:18
+msgid "Wallpapers category"
+msgstr "Duvar kağıdı kategorisi"
+
+#: data/io.github.davidoc26.wallpaper_selector.metainfo.xml.in.in:8
+msgid "Downloads and applies wallpapers"
+msgstr "Duvar kağıtlarını indirir ve uygular"
+
+#: data/io.github.davidoc26.wallpaper_selector.metainfo.xml.in.in:10
+msgid "Simple application to download and set wallpapers from wallhaven"
+msgstr "Wallhaven sitesinden duvar kağıtları indirmek ve uygulamak için basit bir uygulama"
+
+#: data/io.github.davidoc26.wallpaper_selector.metainfo.xml.in.in:13
+msgid "wallpapers"
+msgstr "wallpapers"
+
+#: data/io.github.davidoc26.wallpaper_selector.metainfo.xml.in.in:18
+msgid "Main window"
+msgstr "Ana pencere"
+
+#: data/io.github.davidoc26.wallpaper_selector.metainfo.xml.in.in:27
+msgid "Small correction: window refresh after category selection"
+msgstr "Küçük düzeltme: kategori seçiminden sonra pencere yenileme"
+
+#: data/io.github.davidoc26.wallpaper_selector.metainfo.xml.in.in:32
+msgid "Added preferences window and the ability to choose a wallpaper category"
+msgstr "Tercihler penceresi ve duvar kağıdı kategorisi seçme yeteneği eklendi"
+
+#: data/io.github.davidoc26.wallpaper_selector.metainfo.xml.in.in:37
+msgid "Removed flatpak d-bus access, uses portals instead"
+msgstr "Flatpak d-bus erişimi kaldırıldı, bunun yerine portallar kullanılıyor"
+
+#: data/io.github.davidoc26.wallpaper_selector.metainfo.xml.in.in:42
+msgid "First release! Supports only gnome now"
+msgstr "İlk sürüm! Şimdilik sadece GNOME'u destekliyor"
+
+#: data/io.github.davidoc26.wallpaper_selector.metainfo.xml.in.in:50
+msgid "David Eritsyan"
+msgstr "David Eritsyan"
+
+#: data/resources/ui/preferences.ui:9 data/resources/ui/preferences.ui:21
+msgid "General"
+msgstr "Genel"
+
+#: data/resources/ui/preferences.ui:16
+msgid "_Category"
+msgstr "_Kategori"
+
+#: data/resources/ui/preferences.ui:22
+msgid "Anime"
+msgstr "Anime"
+
+#: data/resources/ui/preferences.ui:23
+msgid "People"
+msgstr "Kişiler"
+
+#: data/resources/ui/shortcuts.ui:11
+msgctxt "shortcut window"
+msgid "General"
+msgstr "Genel"
+
+#: data/resources/ui/shortcuts.ui:14
+msgctxt "shortcut window"
+msgid "Show Shortcuts"
+msgstr "Kısayolları Göster"
+
+#: data/resources/ui/shortcuts.ui:20
+msgctxt "shortcut window"
+msgid "Quit"
+msgstr "Çık"
+
+#: data/resources/ui/window.ui:6
+msgid "_Preferences"
+msgstr "_Tercihler"
+
+#: data/resources/ui/window.ui:10
+msgid "_Keyboard Shortcuts"
+msgstr "_Klavye Kısayolları"
+
+#: data/resources/ui/window.ui:14
+msgid "_About Wallpaper Selector"
+msgstr "Duvar Kağıdı Seçici _Hakkında"
+
+msgid "Downloading your new wallpaper 🙂"
+msgstr "Yeni duvar kağıdınız indiriliyor 🙂"
+
+msgid "Enjoy 🤘"
+msgstr "Tadını çıkarın 🤘"
+
+msgid "Something went wrong"
+msgstr "Bir şeyler yanlış gitti"
+
+msgid "translator-credits"
+msgstr "Sabri Ünal <libreajans@gmail.com>"
