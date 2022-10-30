@@ -11,10 +11,10 @@ use adw::{gio, glib};
 use ashpd::desktop::wallpaper::SetOn;
 use ashpd::desktop::ResponseError;
 use ashpd::WindowIdentifier;
+use gettextrs::gettext;
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 use gtk::{GridView, Image, PositionType, ScrolledWindow, SignalListItemFactory, SingleSelection};
-use gettextrs::gettext;
 
 use crate::api::wallhaven::client::{Category, Client};
 use crate::application::WallpaperSelectorApplication;
