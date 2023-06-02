@@ -9,7 +9,6 @@ mod imp {
     use adw::glib;
     use adw::subclass::prelude::*;
     use adw::{gio, ComboRow};
-    use gtk::subclass::prelude::*;
     use gtk::CompositeTemplate;
 
     use crate::config::APP_ID;

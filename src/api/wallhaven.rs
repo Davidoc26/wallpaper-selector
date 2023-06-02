@@ -55,16 +55,12 @@ pub mod client {
         }
     }
 
+    #[derive(Default)]
     pub enum Category {
+        #[default]
         General,
         Anime,
         People,
-    }
-
-    impl Default for Category {
-        fn default() -> Self {
-            Category::General
-        }
     }
 
     impl Category {

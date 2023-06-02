@@ -8,7 +8,8 @@ mod imp {
     use adw::gdk::Texture;
     use adw::glib;
     use adw::glib::once_cell::sync::Lazy;
-    use adw::glib::{ParamFlags, ParamSpecObject, ParamSpecString, StaticType, ToValue};
+    use adw::glib::{ParamFlags, ParamSpecObject, ParamSpecString, ToValue};
+    use adw::prelude::ParamSpecBuilderExt;
     use adw::subclass::prelude::{ObjectImpl, ObjectSubclass};
 
     use crate::gio::glib::{ParamSpec, Value};
@@ -29,14 +30,16 @@ mod imp {
         fn properties() -> &'static [ParamSpec] {
             static PROPERTIES: Lazy<Vec<ParamSpec>> = Lazy::new(|| {
                 vec![
-                    ParamSpecString::new("path", "path", "path", None, ParamFlags::READWRITE),
-                    ParamSpecObject::new(
-                        "texture",
-                        "texture",
-                        "texture",
-                        Texture::static_type(),
-                        ParamFlags::READWRITE,
-                    ),
+                    ParamSpecString::builder("path")
+                        .nick("path")
+                        .blurb("path")
+                        .flags(ParamFlags::READWRITE)
+                        .build(),
+                    ParamSpecObject::builder::<Texture>("texture")
+                        .nick("texture")
+                        .blurb("texture")
+                        .flags(ParamFlags::READWRITE)
+                        .build(),
                 ]
             });
 

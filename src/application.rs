@@ -135,7 +135,7 @@ impl WallpaperSelectorApplication {
         let provider = gtk::CssProvider::new();
         provider.load_from_resource("/io/github/davidoc26/wallpaper_selector/style.css");
         if let Some(display) = gdk::Display::default() {
-            gtk::StyleContext::add_provider_for_display(
+            gtk::style_context_add_provider_for_display(
                 &display,
                 &provider,
                 gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
@@ -150,7 +150,7 @@ impl WallpaperSelectorApplication {
             .website("https://github.com/davidoc26/wallpaper-selector/")
             .version(VERSION)
             .transient_for(&self.main_window())
-            .translator_credits(&gettext("translator-credits"))
+            .translator_credits(gettext("translator-credits"))
             .modal(true)
             .authors(vec!["David Eritsyan"])
             .build();
