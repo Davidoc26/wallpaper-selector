@@ -4,8 +4,8 @@ use std::sync::Arc;
 
 use adw::gdk::Texture;
 use adw::gio::ListStore;
-use adw::glib::{clone, Object};
 use adw::glib::MainContext;
+use adw::glib::{clone, Object};
 use adw::Toast;
 use adw::{gio, glib};
 use ashpd::desktop::open_uri::OpenDirectoryRequest;
@@ -112,9 +112,7 @@ glib::wrapper! {
 
 impl WallpaperSelectorWindow {
     pub fn new(app: &WallpaperSelectorApplication) -> Self {
-        Object::builder()
-            .property("application", app)
-            .build()
+        Object::builder().property("application", app).build()
     }
 
     fn load(&self, provider: Arc<Wallhaven>, sender: Arc<Sender<ProviderMessage>>) {

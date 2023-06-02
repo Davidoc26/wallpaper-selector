@@ -82,7 +82,10 @@ impl WallpaperSelectorApplication {
     pub fn new() -> Self {
         glib::Object::builder()
             .property("application-id", APP_ID)
-            .property("resource-base-path", "/io/github/davidoc26/wallpaper_selector/")
+            .property(
+                "resource-base-path",
+                "/io/github/davidoc26/wallpaper_selector/",
+            )
             .build()
     }
 
