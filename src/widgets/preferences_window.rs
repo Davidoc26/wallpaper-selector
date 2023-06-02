@@ -9,7 +9,6 @@ mod imp {
     use adw::glib;
     use adw::subclass::prelude::*;
     use adw::{gio, ComboRow};
-    use gtk::prelude::InitializingWidgetExt;
     use gtk::subclass::prelude::*;
     use gtk::CompositeTemplate;
 
@@ -64,7 +63,7 @@ glib::wrapper! {
 
 impl PreferencesWindow {
     pub fn new() -> Self {
-        let window: Self = Object::new(&[]).expect("Failed to create PreferencesWindow");
+        let window: Self = Object::builder().build();
         window.bind_settings();
 
         window

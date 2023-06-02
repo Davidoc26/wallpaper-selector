@@ -43,7 +43,7 @@ mod imp {
             PROPERTIES.as_ref()
         }
 
-        fn set_property(&self, _obj: &Self::Type, _id: usize, value: &Value, _pspec: &ParamSpec) {
+        fn set_property(&self, _id: usize, value: &Value, _pspec: &ParamSpec) {
             match _pspec.name() {
                 "path" => {
                     let path = value.get::<String>().expect("Value must be String");
@@ -57,7 +57,7 @@ mod imp {
             }
         }
 
-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &ParamSpec) -> Value {
+        fn property(&self, _id: usize, pspec: &ParamSpec) -> Value {
             match pspec.name() {
                 "path" => self.path.borrow().to_value(),
                 "texture" => self.texture.borrow().to_value(),
@@ -73,6 +73,9 @@ glib::wrapper! {
 
 impl ImageData {
     pub fn new(path: String, texture: Texture) -> Self {
-        Object::new(&[("path", &path), ("texture", &texture)]).expect("Can't create `ImageData`")
+        Object::builder()
+            .property("path", &path)
+            .property("texture", &texture)
+            .build()
     }
 }

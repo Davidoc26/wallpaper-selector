@@ -13,7 +13,7 @@ mod imp {
     use adw::subclass::application::AdwApplicationImpl;
     use adw::Application;
     use glib::WeakRef;
-    use once_cell::sync::OnceCell;
+    use std::cell::OnceCell;
 
     use crate::window::WallpaperSelectorWindow;
 
@@ -34,9 +34,10 @@ mod imp {
     impl ObjectImpl for WallpaperSelectorApplication {}
 
     impl ApplicationImpl for WallpaperSelectorApplication {
-        fn activate(&self, app: &Self::Type) {
+        fn activate(&self) {
             debug!("AdwApplication<WallpaperSelectorApplication>::activate");
-            self.parent_activate(app);
+            self.parent_activate();
+            let app = self.obj();
 
             if let Some(window) = self.window.get() {
                 let window = window.upgrade().unwrap();
@@ -44,7 +45,7 @@ mod imp {
                 return;
             }
 
-            let window = WallpaperSelectorWindow::new(app);
+            let window = WallpaperSelectorWindow::new(&app);
             self.window
                 .set(window.downgrade())
                 .expect("Window already set.");
@@ -53,10 +54,10 @@ mod imp {
             app.main_window().present();
         }
 
-        fn startup(&self, app: &Self::Type) {
+        fn startup(&self) {
             debug!("AdwApplication<WallpaperSelectorApplication>::startup");
-            self.parent_startup(app);
-
+            self.parent_startup();
+            let app = self.obj();
             // Set icons for shell
             gtk::Window::set_default_icon_name(APP_ID);
 
@@ -79,15 +80,10 @@ glib::wrapper! {
 
 impl WallpaperSelectorApplication {
     pub fn new() -> Self {
-        glib::Object::new(&[
-            ("application-id", &Some(APP_ID)),
-            ("flags", &gio::ApplicationFlags::empty()),
-            (
-                "resource-base-path",
-                &Some("/io/github/davidoc26/wallpaper_selector/"),
-            ),
-        ])
-        .expect("Application initialization failed...")
+        glib::Object::builder()
+            .property("application-id", APP_ID)
+            .property("resource-base-path", "/io/github/davidoc26/wallpaper_selector/")
+            .build()
     }
 
     fn main_window(&self) -> WallpaperSelectorWindow {
@@ -153,7 +149,7 @@ impl WallpaperSelectorApplication {
             .transient_for(&self.main_window())
             .translator_credits(&gettext("translator-credits"))
             .modal(true)
-            .authors(vec!["David Eritsyan".into()])
+            .authors(vec!["David Eritsyan"])
             .build();
 
         dialog.present();

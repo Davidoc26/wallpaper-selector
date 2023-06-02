@@ -4,11 +4,12 @@ use std::sync::Arc;
 
 use adw::gdk::Texture;
 use adw::gio::ListStore;
-use adw::glib::clone;
+use adw::glib::{clone, Object};
 use adw::glib::MainContext;
 use adw::Toast;
 use adw::{gio, glib};
-use ashpd::desktop::wallpaper::SetOn;
+use ashpd::desktop::open_uri::OpenDirectoryRequest;
+use ashpd::desktop::wallpaper::{SetOn, WallpaperRequest};
 use ashpd::desktop::ResponseError;
 use ashpd::WindowIdentifier;
 use gettextrs::gettext;
@@ -71,9 +72,9 @@ mod imp {
     }
 
     impl ObjectImpl for WallpaperSelectorWindow {
-        fn constructed(&self, obj: &Self::Type) {
-            self.parent_constructed(obj);
-
+        fn constructed(&self) {
+            self.parent_constructed();
+            let obj = self.obj();
             // Devel Profile
             if PROFILE == "Devel" {
                 obj.add_css_class("devel");
@@ -88,13 +89,13 @@ mod imp {
 
     impl WindowImpl for WallpaperSelectorWindow {
         // Save window state on delete event
-        fn close_request(&self, window: &Self::Type) -> gtk::Inhibit {
-            if let Err(err) = window.save_window_size() {
+        fn close_request(&self) -> gtk::Inhibit {
+            if let Err(err) = self.obj().save_window_size() {
                 log::warn!("Failed to save window state, {}", &err);
             }
 
             // Pass close request on to the parent
-            self.parent_close_request(window)
+            self.parent_close_request()
         }
     }
 
@@ -111,8 +112,9 @@ glib::wrapper! {
 
 impl WallpaperSelectorWindow {
     pub fn new(app: &WallpaperSelectorApplication) -> Self {
-        glib::Object::new(&[("application", app)])
-            .expect("Failed to create WallpaperSelectorWindow")
+        Object::builder()
+            .property("application", app)
+            .build()
     }
 
     fn load(&self, provider: Arc<Wallhaven>, sender: Arc<Sender<ProviderMessage>>) {
@@ -124,17 +126,13 @@ impl WallpaperSelectorWindow {
     }
 
     pub fn build_grid(&self) {
-        let model: Arc<ListStore> = Arc::new(
-            ListStore::builder()
-                .item_type(ImageData::static_type())
-                .build(),
-        );
+        let model = ListStore::new(ImageData::static_type());
         let client = Client::new(None);
         let (sender, receiver) = MainContext::channel::<ProviderMessage>(glib::PRIORITY_DEFAULT);
         let sender = Arc::new(sender);
 
         let provider = Arc::new(Wallhaven::new(client));
-        let selection_model = SingleSelection::new(Some(&*model));
+        let selection_model = SingleSelection::new(Some(model.clone()));
 
         let grid_view = self.prepare_grid_view(Arc::clone(&provider), selection_model);
 
@@ -229,8 +227,11 @@ impl WallpaperSelectorWindow {
                             let identifier = WindowIdentifier::from_native(&root).await;
                             let file = File::open(path).unwrap();
 
-                            let result = ashpd::desktop::wallpaper::set_from_file(&identifier, &file, true, SetOn::Background).await;
-
+                            let result = WallpaperRequest::default().set_on(SetOn::Background)
+                                .identifier(Some(identifier))
+                                .show_preview(true)
+                                .build_file(&file)
+                                .await;
                             match result {
                                 Ok(_) => window.send_toast(&gettext("Enjoy 🤘"), Some(3)),
                                 Err(e) => {
@@ -239,16 +240,16 @@ impl WallpaperSelectorWindow {
                                             match e {
                                                 ResponseError::Cancelled => {}
                                                 ResponseError::Other => {
-                                                    if ashpd::desktop::open_uri::open_directory(&identifier, &file).await.is_err() {
+                                                    if OpenDirectoryRequest::default().send(&file).await.is_err(){
                                                         window.send_toast(&gettext("Something went wrong"), Some(3));
-                                                    };
+                                                    }
                                                 },
                                             }
                                         }
                                         _ => {
-                                            if ashpd::desktop::open_uri::open_directory(&identifier, &file).await.is_err() {
+                                            if OpenDirectoryRequest::default().send(&file).await.is_err(){
                                                 window.send_toast(&gettext("Something went wrong"), Some(3));
-                                            };
+                                            }
                                         }
                                     }
                                 },
@@ -312,7 +313,7 @@ impl WallpaperSelectorWindow {
 
     pub fn send_toast(&self, message: &str, timeout: Option<u32>) {
         self.imp().toast.add_toast(
-            &Toast::builder()
+            Toast::builder()
                 .title(message)
                 .timeout(timeout.unwrap_or(5))
                 .build(),
