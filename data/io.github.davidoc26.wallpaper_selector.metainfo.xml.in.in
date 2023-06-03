@@ -22,6 +22,11 @@
   <url type="bugtracker">https://github.com/davidoc26/wallpaper-selector/issues</url>
   <content_rating type="oars-1.0" />
   <releases>
+    <release version="0.3.2" date="2023-06-03">
+      <description>
+        <p>Minor improvements and the ability to open the folder with installed wallpapers</p>
+      </description>
+    </release>
     <release version="0.3.1" date="2022-10-23">
       <description>
         <p>Small correction: window refresh after category selection</p>
