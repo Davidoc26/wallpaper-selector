@@ -7,6 +7,10 @@
         <attribute name="action">app.preferences</attribute>
       </item>
       <item>
+        <attribute name="label" translatable="yes">Open Wallpapers Folder</attribute>
+        <attribute name="action">app.folder</attribute>
+      </item>
+      <item>
         <attribute name="label" translatable="yes">_Keyboard Shortcuts</attribute>
         <attribute name="action">win.show-help-overlay</attribute>
       </item>

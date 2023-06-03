@@ -1,9 +1,11 @@
+use adw::glib::MainContext;
 use gettextrs::gettext;
 use glib::clone;
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 use gtk::{gdk, gio, glib};
 use log::{debug, info};
+use std::fs::File;
 
 use crate::config::{APP_ID, PKGDATADIR, PROFILE, VERSION};
 use crate::widgets::PreferencesWindow;
@@ -116,6 +118,25 @@ impl WallpaperSelectorApplication {
             app.show_preferences_window();
         }));
         self.add_action(&action_preferences);
+
+        // Wallpapers folder
+        let action_open_wallpapers_folder = gio::SimpleAction::new("folder", None);
+        action_open_wallpapers_folder.connect_activate(clone!(@weak self as app => move |_,_| {
+            let context = MainContext::default();
+            context.spawn_local(clone!(@weak app => async move{
+                app.open_wallpapers_folder().await;
+            }));
+        }));
+        self.add_action(&action_open_wallpapers_folder);
+    }
+
+    async fn open_wallpapers_folder(&self) {
+        let path = std::env::var("XDG_DATA_HOME").unwrap();
+        let directory = File::open(&path).unwrap();
+        ashpd::desktop::open_uri::OpenDirectoryRequest::default()
+            .send(&directory)
+            .await
+            .unwrap();
     }
 
     fn show_preferences_window(&self) {
