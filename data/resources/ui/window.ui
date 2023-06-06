@@ -10,6 +10,8 @@
         <attribute name="label" translatable="yes">Open Wallpapers Folder</attribute>
         <attribute name="action">app.folder</attribute>
       </item>
+    </section>
+    <section>
       <item>
         <attribute name="label" translatable="yes">_Keyboard Shortcuts</attribute>
         <attribute name="action">win.show-help-overlay</attribute>
@@ -25,23 +27,23 @@
     <property name="default-width">600</property>
     <property name="default-height">300</property>
     <child>
-    <object class="AdwToastOverlay" id="toast">
-      <child>
-        <object class="GtkBox" id="main_box">
-          <property name="orientation">vertical</property>
-          <child>
-            <object class="AdwHeaderBar" id="header_bar">
+      <object class="AdwToastOverlay" id="toast">
+        <child>
+          <object class="GtkBox" id="main_box">
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="AdwHeaderBar" id="header_bar">
                 <child type="end">
                   <object class="GtkMenuButton">
                     <property name="menu-model">primary_menu</property>
                     <property name="icon-name">open-menu-symbolic</property>
                   </object>
                 </child>
-            </object>
-          </child>
-        </object>
-      </child>
-    </object>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
     </child>
 
   </template>
