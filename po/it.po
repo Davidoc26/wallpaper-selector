@@ -1,5 +1,5 @@
 # Italian translation for io.github.davidoc26.wallpaper_selector.
-# Copyright (C) 2022 io.github.davidoc26.wallpaper_selector's COPYRIGHT HOLDER
+# Copyright (C) 2023 io.github.davidoc26.wallpaper_selector's COPYRIGHT HOLDER
 # This file is distributed under the same license as the io.github.davidoc26.wallpaper_selector package.
 #
 # Albano Battistella <albanobattistella@gmail.com>, 2023.
