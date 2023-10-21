@@ -23,27 +23,27 @@
   <content_rating type="oars-1.0" />
   <releases>
     <release version="0.3.2" date="2023-06-03">
-      <description>
+      <description translatable="no">
         <p>Minor improvements and the ability to open the folder with installed wallpapers</p>
       </description>
     </release>
     <release version="0.3.1" date="2022-10-23">
-      <description>
+      <description translatable="no">
         <p>Small correction: window refresh after category selection</p>
       </description>
     </release>
     <release version="0.3.0" date="2022-07-17">
-      <description>
+      <description translatable="no">
         <p>Added preferences window and the ability to choose a wallpaper category</p>
       </description>
     </release>
     <release version="0.2.0" date="2022-06-11">
-      <description>
+      <description translatable="no">
         <p>Removed flatpak d-bus access, uses portals instead</p>
       </description>
     </release>
     <release version="0.1.0" date="2022-06-09">
-      <description>
+      <description translatable="no">
         <p>First release! Supports only gnome now</p>
       </description>
     </release>
