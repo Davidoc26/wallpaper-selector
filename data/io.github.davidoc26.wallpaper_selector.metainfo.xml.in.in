@@ -23,7 +23,9 @@
   </screenshots>
   <url type="homepage">https://github.com/davidoc26/wallpaper-selector</url>
   <url type="bugtracker">https://github.com/davidoc26/wallpaper-selector/issues</url>
-  <content_rating type="oars-1.0" />
+  <url type="vcs-browser">https://github.com/davidoc26/wallpaper-selector</url>
+  <url type="translate">https://github.com/Davidoc26/wallpaper-selector/tree/main/po</url>
+  <content_rating type="oars-1.1" />
   <releases>
     <release version="0.3.2" date="2023-06-03">
       <description translatable="no">
