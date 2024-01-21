@@ -27,6 +27,11 @@
   <url type="translate">https://github.com/Davidoc26/wallpaper-selector/tree/main/po</url>
   <content_rating type="oars-1.1" />
   <releases>
+    <release version="0.3.3" date="2024-01-21">
+      <description translatable="no">
+        <p>Minor improvements and runtime version update</p>
+      </description>
+    </release>
     <release version="0.3.2" date="2023-06-03">
       <description translatable="no">
         <p>Minor improvements and the ability to open the folder with installed wallpapers</p>
