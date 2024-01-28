@@ -112,7 +112,7 @@ msgstr "Общие"
 #: data/resources/ui/shortcuts.ui:14
 msgctxt "shortcut window"
 msgid "Show Shortcuts"
-msgstr "Показать сокращения"
+msgstr "Показать комбинации клавиш"
 
 #: data/resources/ui/shortcuts.ui:20
 msgctxt "shortcut window"
@@ -125,7 +125,7 @@ msgstr "_Параметры"
 
 #: data/resources/ui/window.ui:10
 msgid "_Keyboard Shortcuts"
-msgstr "_Сокращения клавиатуры"
+msgstr "_Комбинации клавиш"
 
 #: data/resources/ui/window.ui:14
 msgid "_About Wallpaper Selector"
