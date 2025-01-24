@@ -17,7 +17,7 @@ mod window;
 
 static RUNTIME: Lazy<Runtime> = Lazy::new(|| Runtime::new().unwrap());
 
-fn main() {
+fn main() -> glib::ExitCode {
     // Initialize logger
     pretty_env_logger::init();
 
@@ -32,5 +32,5 @@ fn main() {
     gio::resources_register(&res);
 
     let app = WallpaperSelectorApplication::new();
-    app.run();
+    app.run()
 }
