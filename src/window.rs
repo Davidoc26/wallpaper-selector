@@ -13,6 +13,7 @@ use ashpd::desktop::wallpaper::{SetOn, WallpaperRequest};
 use ashpd::desktop::ResponseError;
 use ashpd::WindowIdentifier;
 use gettextrs::gettext;
+use gtk::glib::{ControlFlow, Priority};
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 use gtk::{GridView, Image, PositionType, ScrolledWindow, SignalListItemFactory, SingleSelection};
@@ -89,7 +90,7 @@ mod imp {
 
     impl WindowImpl for WallpaperSelectorWindow {
         // Save window state on delete event
-        fn close_request(&self) -> gtk::Inhibit {
+        fn close_request(&self) -> glib::Propagation {
             if let Err(err) = self.obj().save_window_size() {
                 log::warn!("Failed to save window state, {}", &err);
             }
@@ -124,9 +125,9 @@ impl WallpaperSelectorWindow {
     }
 
     pub fn build_grid(&self) {
-        let model = ListStore::new(ImageData::static_type());
+        let model = ListStore::new::<ImageData>();
         let client = Client::new(None);
-        let (sender, receiver) = MainContext::channel::<ProviderMessage>(glib::PRIORITY_DEFAULT);
+        let (sender, receiver) = MainContext::channel::<ProviderMessage>(Priority::DEFAULT);
         let sender = Arc::new(sender);
 
         let provider = Arc::new(Wallhaven::new(client));
@@ -149,7 +150,7 @@ impl WallpaperSelectorWindow {
                     }
                 }
 
-                Continue(true)
+                ControlFlow::Continue
             }),
         );
 
@@ -210,7 +211,7 @@ impl WallpaperSelectorWindow {
 
             let url = image_data.property::<String>("path");
 
-            let (sender, receiver) = MainContext::channel::<Result<String, Box<dyn Error + Send + Sync>>>(glib::PRIORITY_DEFAULT);
+            let (sender, receiver) = MainContext::channel::<Result<String, Box<dyn Error + Send + Sync>>>(Priority::DEFAULT);
             window.send_toast(&gettext("Downloading your new wallpaper 🙂"), Some(2));
             RUNTIME.spawn(clone!(@strong provider => async move{
                 let path = provider.download_wallpaper(url.to_string()).await;
@@ -257,7 +258,7 @@ impl WallpaperSelectorWindow {
                     Err(e) => window.send_toast(&e.to_string(), Some(3)),
                 }
 
-                Continue(false)
+                ControlFlow::Break
             }));
         }));
 

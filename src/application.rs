@@ -179,12 +179,12 @@ impl WallpaperSelectorApplication {
         dialog.present();
     }
 
-    pub fn run(&self) {
+    pub fn run(&self) -> glib::ExitCode {
         info!("Wallpaper Selector ({})", APP_ID);
         info!("Version: {} ({})", VERSION, PROFILE);
         info!("Datadir: {}", PKGDATADIR);
 
-        ApplicationExtManual::run(self);
+        ApplicationExtManual::run(self)
     }
 }
 
