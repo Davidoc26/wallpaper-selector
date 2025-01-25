@@ -2667,6 +2667,7 @@ name = "wallpaper-selector"
 version = "0.3.3"
 dependencies = [
  "ashpd",
+ "async-channel 2.3.1",
  "bytes",
  "gettext-rs",
  "gtk4",
