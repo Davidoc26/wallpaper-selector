@@ -1,10 +1,8 @@
-use std::error::Error;
 use std::fs::File;
 use std::sync::Arc;
 
 use adw::gdk::Texture;
 use adw::gio::ListStore;
-use adw::glib::MainContext;
 use adw::glib::{clone, Object};
 use adw::Toast;
 use adw::{gio, glib};
@@ -12,8 +10,9 @@ use ashpd::desktop::open_uri::OpenDirectoryRequest;
 use ashpd::desktop::wallpaper::{SetOn, WallpaperRequest};
 use ashpd::desktop::ResponseError;
 use ashpd::WindowIdentifier;
+use async_channel::Sender;
 use gettextrs::gettext;
-use gtk::glib::{ControlFlow, Priority};
+use gtk::glib::spawn_future_local;
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 use gtk::{GridView, Image, PositionType, ScrolledWindow, SignalListItemFactory, SingleSelection};
@@ -21,7 +20,6 @@ use gtk::{GridView, Image, PositionType, ScrolledWindow, SignalListItemFactory, 
 use crate::api::wallhaven::client::{Category, Client};
 use crate::application::WallpaperSelectorApplication;
 use crate::config::{APP_ID, PROFILE};
-use crate::glib::Sender;
 use crate::image_data::ImageData;
 use crate::provider::wallhaven::{ProviderMessage, Wallhaven};
 use crate::RUNTIME;
@@ -127,32 +125,27 @@ impl WallpaperSelectorWindow {
     pub fn build_grid(&self) {
         let model = ListStore::new::<ImageData>();
         let client = Client::new(None);
-        let (sender, receiver) = MainContext::channel::<ProviderMessage>(Priority::DEFAULT);
+
+        let (sender, receiver) = async_channel::unbounded::<ProviderMessage>();
         let sender = Arc::new(sender);
+
+        spawn_future_local(clone!(@strong model => async move{
+            while let Ok(provider_message) = receiver.recv().await {
+                match provider_message {
+                    ProviderMessage::Image(path, texture) => {
+                        let image_data = ImageData::new(path,texture);
+                        model.append(&image_data);
+                    },
+                        ProviderMessage::Reset => model.remove_all(),
+                    }
+                }
+        }));
 
         let provider = Arc::new(Wallhaven::new(client));
         let selection_model = SingleSelection::new(Some(model.clone()));
 
         let grid_view = self.prepare_grid_view(Arc::clone(&provider), selection_model);
-
         self.load(Arc::clone(&provider), Arc::clone(&sender));
-
-        receiver.attach(
-            None,
-            clone!(@strong model => move|message| {
-                match message {
-                    ProviderMessage::Image(path, texture) => {
-                        let image_data = ImageData::new(path, texture);
-                        model.append(&image_data);
-                    }
-                    ProviderMessage::Reset => {
-                        model.remove_all();
-                    }
-                }
-
-                ControlFlow::Continue
-            }),
-        );
 
         // Reset grid on category change (needs refactoring)
         self.imp().settings.connect_changed(Some("category"), clone!(@strong model, @strong self as window, @strong provider, @strong sender =>  move|_, _| {
@@ -211,26 +204,27 @@ impl WallpaperSelectorWindow {
 
             let url = image_data.property::<String>("path");
 
-            let (sender, receiver) = MainContext::channel::<Result<String, Box<dyn Error + Send + Sync>>>(Priority::DEFAULT);
+            let (sender, receiver) = async_channel::unbounded();
             window.send_toast(&gettext("Downloading your new wallpaper 🙂"), Some(2));
             RUNTIME.spawn(clone!(@strong provider => async move{
                 let path = provider.download_wallpaper(url.to_string()).await;
-                sender.send(path).unwrap();
+                sender.send(path).await.unwrap();
             }));
 
-            receiver.attach(None,clone!(@strong window => move |result| {
-                match result{
-                    Ok(path) => {
-                        MainContext::default().spawn_local(clone!(@strong window => async move {
+            spawn_future_local(clone!(@strong window, @strong receiver => async move{
+                while let Ok(message) = receiver.recv().await {
+                    match message {
+                        Ok(path) => {
                             let root = window.native().unwrap();
                             let identifier = WindowIdentifier::from_native(&root).await;
                             let file = File::open(path).unwrap();
 
                             let result = WallpaperRequest::default().set_on(SetOn::Background)
-                                .identifier(Some(identifier))
-                                .show_preview(true)
+                                .identifier(identifier)
+                                .show_preview(Some(true))
                                 .build_file(&file)
                                 .await;
+
                             match result {
                                 Ok(_) => window.send_toast(&gettext("Enjoy 🤘"), Some(3)),
                                 Err(e) => {
@@ -252,14 +246,14 @@ impl WallpaperSelectorWindow {
                                         }
                                     }
                                 },
-                            };
-                        }));
-                    },
-                    Err(e) => window.send_toast(&e.to_string(), Some(3)),
-                }
+                            }
 
-                ControlFlow::Break
+                        },
+                        Err(e) => window.send_toast(&e.to_string(), Some(3)),
+                    }
+                }
             }));
+
         }));
 
         grid_view

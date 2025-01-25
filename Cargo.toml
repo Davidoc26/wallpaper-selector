@@ -15,3 +15,4 @@ reqwest = { version = "0.11", features = ["json"] }
 serde = { version = "1.0", features = ["derive"] }
 bytes = "1"
 ashpd = { version = "0.5.0", features = ["gtk4"] }
+async-channel = "2.3.1"
