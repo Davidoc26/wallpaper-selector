@@ -4,8 +4,9 @@ use std::sync::{Arc, Mutex};
 
 use adw::gdk::Texture;
 use adw::glib;
-use adw::glib::{Bytes, Sender};
+use adw::glib::Bytes;
 use adw::prelude::*;
+use async_channel::Sender;
 
 use crate::api::wallhaven::client::{Category, Client};
 use crate::api::wallhaven::response::ThumbType;
@@ -111,19 +112,20 @@ impl Wallhaven {
             let texture = Texture::from_bytes(&bytes).unwrap();
 
             if self.reached_max_image_count() {
-                sender.send(ProviderMessage::Reset).unwrap();
+                sender.send(ProviderMessage::Reset).await.unwrap();
                 self.reset_image_count();
             }
 
             sender
                 .send(ProviderMessage::Image(image.get_path(), texture))
+                .await
                 .unwrap();
-
             self.increment_image_count();
         }
     }
 }
 
+#[derive(Debug)]
 pub enum ProviderMessage {
     Image(String, Texture),
     Reset,
