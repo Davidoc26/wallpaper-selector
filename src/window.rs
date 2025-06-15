@@ -1,6 +1,3 @@
-use std::fs::File;
-use std::sync::Arc;
-
 use adw::gdk::Texture;
 use adw::gio::ListStore;
 use adw::glib::{clone, Object};
@@ -16,6 +13,9 @@ use gtk::glib::spawn_future_local;
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 use gtk::{GridView, Image, PositionType, ScrolledWindow, SignalListItemFactory, SingleSelection};
+use std::fs::File;
+use std::sync::atomic::Ordering;
+use std::sync::Arc;
 
 use crate::api::wallhaven::client::{Category, Client};
 use crate::application::WallpaperSelectorApplication;
@@ -28,6 +28,7 @@ mod imp {
     use adw::subclass::application_window::AdwApplicationWindowImpl;
     use adw::ToastOverlay;
     use gtk::CompositeTemplate;
+    use std::sync::atomic::AtomicBool;
 
     use super::*;
 
@@ -41,6 +42,7 @@ mod imp {
         #[template_child]
         pub toast: TemplateChild<ToastOverlay>,
         pub settings: gio::Settings,
+        pub is_loading: AtomicBool,
     }
 
     impl Default for WallpaperSelectorWindow {
@@ -50,6 +52,7 @@ mod imp {
                 main_box: Default::default(),
                 toast: Default::default(),
                 settings: gio::Settings::new(APP_ID),
+                is_loading: AtomicBool::new(false),
             }
         }
     }
@@ -115,10 +118,20 @@ impl WallpaperSelectorWindow {
     }
 
     fn load(&self, provider: Arc<Wallhaven>, sender: Arc<Sender<ProviderMessage>>) {
+        // Return if images are loading
+        if self.imp().is_loading.load(Ordering::Relaxed) {
+            return;
+        }
+
+        self.imp().is_loading.store(true, Ordering::Relaxed);
         let category = self.current_category();
 
         RUNTIME.spawn(async move {
             provider.load_images(&sender, category).await;
+            sender
+                .send(ProviderMessage::ImagesLoaded)
+                .await
+                .expect("Failed to send ProviderMessage::Loading");
         });
     }
 
@@ -129,7 +142,7 @@ impl WallpaperSelectorWindow {
         let (sender, receiver) = async_channel::unbounded::<ProviderMessage>();
         let sender = Arc::new(sender);
 
-        spawn_future_local(clone!(@strong model => async move{
+        spawn_future_local(clone!(@strong self as window, @strong model => async move{
             while let Ok(provider_message) = receiver.recv().await {
                 match provider_message {
                     ProviderMessage::Image(path, texture) => {
@@ -137,7 +150,9 @@ impl WallpaperSelectorWindow {
                         model.append(&image_data);
                     },
                         ProviderMessage::Reset => model.remove_all(),
-                    }
+                        ProviderMessage::ImagesLoaded => {
+                        window.imp().is_loading.store(false, Ordering::Relaxed);
+                    }}
                 }
         }));
 

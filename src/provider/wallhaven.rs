@@ -128,5 +128,6 @@ impl Wallhaven {
 #[derive(Debug)]
 pub enum ProviderMessage {
     Image(String, Texture),
+    ImagesLoaded,
     Reset,
 }
