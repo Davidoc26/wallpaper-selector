@@ -27,6 +27,16 @@
   <url type="translate">https://github.com/Davidoc26/wallpaper-selector/tree/main/po</url>
   <content_rating type="oars-1.1" />
   <releases>
+    <release version="0.3.4" date="2025-06-15">
+      <description translate="no">
+        <ul>
+            <li>Fixed scroll loading behavior and prevented multiple concurrent loads</li>
+            <li>Russian translation added</li>
+            <li>Small improvements</li>
+            <li>Gtk-rs and libadwaita version update</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.3.3" date="2024-01-21">
       <description translate="no">
         <p>Minor improvements and runtime version update</p>
