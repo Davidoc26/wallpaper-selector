@@ -29,6 +29,7 @@
   <releases>
     <release version="0.3.4" date="2025-06-15">
       <description translate="no">
+      <p>Release 0.3.4</p>
         <ul>
             <li>Fixed scroll loading behavior and prevented multiple concurrent loads</li>
             <li>Russian translation added</li>
