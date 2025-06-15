@@ -2664,7 +2664,7 @@ checksum = "317211a0dc0ceedd78fb2ca9a44aed3d7b9b26f81870d485c07122b4350673b7"
 
 [[package]]
 name = "wallpaper-selector"
-version = "0.3.3"
+version = "0.3.4"
 dependencies = [
  "ashpd",
  "async-channel 2.3.1",
