@@ -5,6 +5,7 @@ use crate::helpers::set_wallpaper;
 use crate::image_data::ImageData;
 use crate::provider::wallhaven::{ProviderMessage, Wallhaven};
 use crate::RUNTIME;
+use adw::gdk::gdk_pixbuf::Pixbuf;
 use adw::gdk::Texture;
 use adw::gio::ListStore;
 use adw::glib::{clone, timeout_future_seconds, Object};
@@ -236,8 +237,8 @@ impl WallpaperSelectorWindow {
 
         spawn_future_local(clone!(@strong self as window => async move {
             while let Ok(path) = receiver.recv().await {
-                if let Ok(texture) = Texture::from_filename(&path) {
-                    let image_data = ImageData::new(path.to_string_lossy().to_string(), texture);
+                if let Ok(texture) = Pixbuf::from_file_at_scale(&path, 200, 200, true) {
+                    let image_data = ImageData::new(path.to_string_lossy().to_string(), Texture::for_pixbuf(&texture));
                     window.imp().downloads_model.append(&image_data);
                     timeout_future_seconds(0).await;
                 }
