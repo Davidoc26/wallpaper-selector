@@ -1,10 +1,16 @@
+use crate::api::wallhaven::client::{Category, Client};
+use crate::application::WallpaperSelectorApplication;
+use crate::config::{APP_ID, PROFILE};
+use crate::helpers::set_wallpaper;
+use crate::image_data::ImageData;
+use crate::provider::wallhaven::{ProviderMessage, Wallhaven};
+use crate::RUNTIME;
 use adw::gdk::Texture;
 use adw::gio::ListStore;
-use adw::glib::{clone, Object};
+use adw::glib::{clone, timeout_future_seconds, Object};
 use adw::Toast;
 use adw::{gio, glib};
 use ashpd::desktop::open_uri::OpenDirectoryRequest;
-use ashpd::desktop::wallpaper::{SetOn, WallpaperRequest};
 use ashpd::desktop::ResponseError;
 use ashpd::WindowIdentifier;
 use async_channel::Sender;
@@ -17,17 +23,11 @@ use std::fs::File;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
-use crate::api::wallhaven::client::{Category, Client};
-use crate::application::WallpaperSelectorApplication;
-use crate::config::{APP_ID, PROFILE};
-use crate::image_data::ImageData;
-use crate::provider::wallhaven::{ProviderMessage, Wallhaven};
-use crate::RUNTIME;
-
 mod imp {
     use adw::subclass::application_window::AdwApplicationWindowImpl;
     use adw::ToastOverlay;
     use gtk::CompositeTemplate;
+    use std::cell::Cell;
     use std::sync::atomic::AtomicBool;
 
     use super::*;
@@ -41,8 +41,20 @@ mod imp {
         pub main_box: TemplateChild<gtk::Box>,
         #[template_child]
         pub toast: TemplateChild<ToastOverlay>,
+        #[template_child]
+        pub wallpapers_page: TemplateChild<adw::ViewStackPage>,
+        #[template_child]
+        pub downloads_box: TemplateChild<gtk::Box>,
+        #[template_child]
+        downloads_page: TemplateChild<adw::ViewStackPage>,
+        #[template_child]
+        pub wallpapers_box: TemplateChild<gtk::Box>,
+        #[template_child]
+        pub stack: TemplateChild<adw::ViewStack>,
+        pub downloads_model: ListStore,
         pub settings: gio::Settings,
         pub is_loading: AtomicBool,
+        pub downloads_loaded: Cell<bool>,
     }
 
     impl Default for WallpaperSelectorWindow {
@@ -51,8 +63,15 @@ mod imp {
                 header_bar: Default::default(),
                 main_box: Default::default(),
                 toast: Default::default(),
+                wallpapers_page: Default::default(),
+                downloads_box: Default::default(),
+                downloads_page: Default::default(),
+                wallpapers_box: Default::default(),
+                downloads_model: ListStore::new::<ImageData>(),
+                stack: Default::default(),
                 settings: gio::Settings::new(APP_ID),
                 is_loading: AtomicBool::new(false),
+                downloads_loaded: Cell::new(false),
             }
         }
     }
@@ -81,6 +100,17 @@ mod imp {
             if PROFILE == "Devel" {
                 obj.add_css_class("devel");
             }
+
+            self.stack
+                .connect_visible_child_notify(clone!(@weak self as window => move |stack| {
+                if !window.downloads_loaded.get() {
+                    if let Some(child) = stack.visible_child() {
+                    if stack.page(&child) == window.downloads_page.get() {
+                        window.obj().build_downloads_page();
+                            window.downloads_loaded.set(true);
+                        }
+                }
+                }}));
 
             // Load latest window state
             obj.load_window_size();
@@ -125,7 +155,6 @@ impl WallpaperSelectorWindow {
 
         self.imp().is_loading.store(true, Ordering::Relaxed);
         let category = self.current_category();
-
         RUNTIME.spawn(async move {
             provider.load_images(&sender, category).await;
             sender
@@ -133,6 +162,89 @@ impl WallpaperSelectorWindow {
                 .await
                 .expect("Failed to send ProviderMessage::Loading");
         });
+    }
+
+    pub fn build_downloads_page(&self) {
+        let selection_model = SingleSelection::new(Some(self.imp().downloads_model.clone()));
+        let grid_view: GridView = GridView::builder()
+            .model(&selection_model)
+            .factory(&self.prepare_factory())
+            .build();
+        let scrolled_window = ScrolledWindow::builder()
+            .hexpand(false)
+            .vexpand(true)
+            .child(&grid_view)
+            .build();
+
+        grid_view.connect_activate(clone!(@strong self as window => move|grid_view, pos| {
+            let model = grid_view.model().unwrap();
+            let image_data = model.item(pos)
+                .unwrap()
+                .downcast::<ImageData>()
+                .unwrap();
+
+            spawn_future_local(clone!(@strong window => async move{
+                            let path = image_data.property::<String>("path");
+                            let file = File::open(path).unwrap();
+                            let root = window.native().unwrap();
+                            let identifier = WindowIdentifier::from_native(&root).await;
+                            let result = set_wallpaper(identifier, &file).await;
+
+                            match result {
+                                Ok(_) => window.send_toast(&gettext("Enjoy 🤘"), Some(3)),
+                                Err(e) => {
+                                    match e {
+                                        ashpd::Error::Response(e) => {
+                                            match e {
+                                                ResponseError::Cancelled => {}
+                                                ResponseError::Other => {
+                                                    if OpenDirectoryRequest::default().send(&file).await.is_err(){
+                                                        window.send_toast(&gettext("Something went wrong"), Some(3));
+                                                    }
+                                                },
+                                            }
+                                        }
+                                        _ => {
+                                            if OpenDirectoryRequest::default().send(&file).await.is_err(){
+                                                window.send_toast(&gettext("Something went wrong"), Some(3));
+                                            }
+                                        }
+                                    }
+                                },
+                            }
+            }));
+        }));
+
+        let (sender, receiver) = async_channel::unbounded::<std::path::PathBuf>();
+
+        RUNTIME.spawn(async move {
+            let path = std::env::var("XDG_DATA_HOME").unwrap();
+
+            if let Ok(entries) = std::fs::read_dir(path) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_file() {
+                        if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+                            if ["png", "jpg"].contains(&ext.to_lowercase().as_str()) {
+                                sender.send(path).await.unwrap();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        spawn_future_local(clone!(@strong self as window => async move {
+            while let Ok(path) = receiver.recv().await {
+                if let Ok(texture) = Texture::from_filename(&path) {
+                    let image_data = ImageData::new(path.to_string_lossy().to_string(), texture);
+                    window.imp().downloads_model.append(&image_data);
+                    timeout_future_seconds(0).await;
+                }
+            }
+        }));
+
+        self.imp().downloads_box.append(&scrolled_window);
     }
 
     pub fn build_grid(&self) {
@@ -183,7 +295,7 @@ impl WallpaperSelectorWindow {
             }),
         );
 
-        self.imp().main_box.append(&scrolled_window);
+        self.imp().wallpapers_box.append(&scrolled_window);
     }
 
     fn current_category(&self) -> Category {
@@ -226,20 +338,15 @@ impl WallpaperSelectorWindow {
                 sender.send(path).await.unwrap();
             }));
 
-            spawn_future_local(clone!(@strong window, @strong receiver => async move{
-                while let Ok(message) = receiver.recv().await {
-                    match message {
-                        Ok(path) => {
-                            let root = window.native().unwrap();
-                            let identifier = WindowIdentifier::from_native(&root).await;
-                            let file = File::open(path).unwrap();
-
-                            let result = WallpaperRequest::default().set_on(SetOn::Background)
-                                .identifier(identifier)
-                                .show_preview(Some(true))
-                                .build_file(&file)
-                                .await;
-
+        spawn_future_local(clone ! ( @ strong window, @ strong receiver => async move{
+            while let Ok(message) = receiver.recv().await {
+                match message {
+                    Ok(path) => {
+                        let root = window.native().unwrap();
+                        let identifier = WindowIdentifier::from_native(&root).await;
+                        let file = File::open( & path).unwrap();
+                        let result = set_wallpaper(identifier, &file).await;
+                        window.imp().downloads_model.append(&ImageData::new(path.clone(), Texture::from_filename(&path).unwrap()));
                             match result {
                                 Ok(_) => window.send_toast(&gettext("Enjoy 🤘"), Some(3)),
                                 Err(e) => {
@@ -320,11 +427,14 @@ impl WallpaperSelectorWindow {
     }
 
     pub fn send_toast(&self, message: &str, timeout: Option<u32>) {
-        self.imp().toast.add_toast(
+        self.add_toast(
             Toast::builder()
                 .title(message)
                 .timeout(timeout.unwrap_or(5))
                 .build(),
-        );
+        )
+    }
+    pub fn add_toast(&self, toast: Toast) {
+        self.imp().toast.add_toast(toast);
     }
 }
