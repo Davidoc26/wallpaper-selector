@@ -10,6 +10,7 @@ mod application;
 #[rustfmt::skip]
 mod config;
 mod api;
+mod helpers;
 mod image_data;
 mod provider;
 mod widgets;

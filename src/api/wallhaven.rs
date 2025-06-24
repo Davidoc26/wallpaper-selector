@@ -120,11 +120,11 @@ pub mod response {
         }
 
         pub fn thumb_url(&self, thumb: ThumbType) -> &String {
-            return match thumb {
+            match thumb {
                 ThumbType::Large => self.thumbs.get("large").unwrap(),
                 ThumbType::Original => self.thumbs.get("original").unwrap(),
                 ThumbType::Small => self.thumbs.get("small").unwrap(),
-            };
+            }
         }
     }
 
