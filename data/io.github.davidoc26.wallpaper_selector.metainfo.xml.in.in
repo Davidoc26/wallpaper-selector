@@ -27,6 +27,11 @@
   <url type="translate">https://github.com/Davidoc26/wallpaper-selector/tree/main/po</url>
   <content_rating type="oars-1.1" />
   <releases>
+    <release version="0.3.5" date="2025-07-14">
+      <description translate="no">
+        <p>Added a new Downloads page to view all previously downloaded wallpapers</p>
+      </description>
+    </release>
     <release version="0.3.4" date="2025-06-15">
       <description translate="no">
       <p>Release 0.3.4</p>
