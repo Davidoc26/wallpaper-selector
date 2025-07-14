@@ -1,6 +1,6 @@
-use adw::glib::once_cell::sync::Lazy;
 use gettextrs::{gettext, LocaleCategory};
 use gtk::{gio, glib};
+use once_cell::sync::Lazy;
 use tokio::runtime::Runtime;
 
 use crate::application::WallpaperSelectorApplication;

@@ -7,10 +7,10 @@ mod imp {
 
     use adw::gdk::Texture;
     use adw::glib;
-    use adw::glib::once_cell::sync::Lazy;
-    use adw::glib::{ParamFlags, ParamSpecObject, ParamSpecString, ToValue};
-    use adw::prelude::ParamSpecBuilderExt;
+    use adw::glib::{ParamFlags, ParamSpecObject, ParamSpecString};
+    use adw::prelude::{ParamSpecBuilderExt, ToValue};
     use adw::subclass::prelude::{ObjectImpl, ObjectSubclass};
+    use once_cell::sync::Lazy;
 
     use crate::gio::glib::{ParamSpec, Value};
 

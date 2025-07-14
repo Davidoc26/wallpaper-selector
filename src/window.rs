@@ -339,7 +339,7 @@ impl WallpaperSelectorWindow {
                 sender.send(path).await.unwrap();
             }));
 
-        spawn_future_local(clone ! ( @ strong window, @ strong receiver => async move{
+        spawn_future_local(clone!(@strong window, @strong receiver => async move{
             while let Ok(message) = receiver.recv().await {
                 match message {
                     Ok(path) => {
@@ -347,7 +347,9 @@ impl WallpaperSelectorWindow {
                         let identifier = WindowIdentifier::from_native(&root).await;
                         let file = File::open( & path).unwrap();
                         let result = set_wallpaper(identifier, &file).await;
-                        window.imp().downloads_model.append(&ImageData::new(path.clone(), Texture::from_filename(&path).unwrap()));
+                        if window.imp().downloads_loaded.get() {
+                            window.imp().downloads_model.append(&ImageData::new(path.clone(), Texture::from_filename(&path).unwrap()));
+                        }
                             match result {
                                 Ok(_) => window.send_toast(&gettext("Enjoy 🤘"), Some(3)),
                                 Err(e) => {
