@@ -20,7 +20,6 @@ use gtk::glib::spawn_future_local;
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 use gtk::{GridView, Image, PositionType, ScrolledWindow, SignalListItemFactory, SingleSelection};
-use std::any::Any;
 use std::fs::File;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
