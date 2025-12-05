@@ -4,8 +4,8 @@ Comment=Simple application to download and set wallpapers
 Type=Application
 Exec=wallpaper-selector
 Terminal=false
-Categories=GNOME;GTK;
-Keywords=Gnome;GTK;
+Categories=Utility;
+Keywords=Wallpapers;
 # Translators: Do NOT translate or transliterate this text (this is an icon file name)!
 Icon=@icon@
 StartupNotify=true
