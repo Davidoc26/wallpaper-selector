@@ -1,39 +1,39 @@
 # Turkish translation for io.github.davidoc26.wallpaper_selector.
-# Copyright (C) 2022 io.github.davidoc26.wallpaper_selector's COPYRIGHT HOLDER
+# Copyright (C) 2022,2025 io.github.davidoc26.wallpaper_selector's COPYRIGHT HOLDER
 # This file is distributed under the same license as the io.github.davidoc26.wallpaper_selector package.
 #
-# Sabri Ünal <libreajans@gmail.com>, 2022.
+# Sabri Ünal <yakushabb@gmail.com>, 2022,2025.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: io.github.davidoc26.wallpaper_selector\n"
 "Report-Msgid-Bugs-To: https://github.com/davidoc26/wallpaper-selector\n"
-"POT-Creation-Date: 2023-10-09 11:18+0300\n"
-"PO-Revision-Date: 2023-10-09 11:27+0300\n"
-"Last-Translator: Sabri Ünal <libreajans@gmail.com>\n"
-"Language-Team: Türkçe <gnome-turk@gnome.org>\n"
+"POT-Creation-Date: 2025-07-14 15:01+0300\n"
+"PO-Revision-Date: 2025-12-05 22:57+0300\n"
+"Last-Translator: Sabri Ünal <yakushabb@gmail.com>\n"
+"Language-Team: Türkçe <takim@gnome.org.tr>\n"
 "Language: tr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 3.4\n"
+"X-Generator: Poedit 3.8\n"
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-KeywordsList: NC_;G_;_;C_;gettext\n"
 "X-Poedit-SearchPath-0: src\n"
 "X-Poedit-SearchPath-1: data\n"
 
-#: data/io.github.davidoc26.wallpaper_selector.desktop.in.in:3
+#: data/io.github.davidoc26.wallpaper_selector.desktop.in.in:2
 #: data/io.github.davidoc26.wallpaper_selector.metainfo.xml.in.in:7
-#: src/main.rs:29
+#: src/main.rs:30
 msgid "Wallpaper Selector"
 msgstr "Duvar Kağıdı Seçici"
 
-#: data/io.github.davidoc26.wallpaper_selector.desktop.in.in:4
+#: data/io.github.davidoc26.wallpaper_selector.desktop.in.in:3
 msgid "Simple application to download and set wallpapers"
 msgstr "Duvar kağıtlarını indirmek ve kurmak için basit bir uygulama"
 
-#: data/io.github.davidoc26.wallpaper_selector.desktop.in.in:9
+#: data/io.github.davidoc26.wallpaper_selector.desktop.in.in:8
 msgid "Gnome;GTK;"
 msgstr "Gnome;GTK;"
 
@@ -64,14 +64,17 @@ msgstr ""
 "uygulama"
 
 #: data/io.github.davidoc26.wallpaper_selector.metainfo.xml.in.in:13
+#, fuzzy
+#| msgid "Wallpapers"
 msgid "wallpapers"
-msgstr "wallpapers"
+msgstr "Duvar Kağıtları"
 
-#: data/io.github.davidoc26.wallpaper_selector.metainfo.xml.in.in:18
+#: data/io.github.davidoc26.wallpaper_selector.metainfo.xml.in.in:21
 msgid "Main window"
 msgstr "Ana pencere"
 
-#: data/io.github.davidoc26.wallpaper_selector.metainfo.xml.in.in:55
+#: data/io.github.davidoc26.wallpaper_selector.metainfo.xml.in.in:81
+#: data/io.github.davidoc26.wallpaper_selector.metainfo.xml.in.in:83
 msgid "David Eritsyan"
 msgstr "David Eritsyan"
 
@@ -106,6 +109,14 @@ msgstr "_Klavye Kısayolları"
 msgid "_About Wallpaper Selector"
 msgstr "Duvar Kağıdı Seçici _Hakkında"
 
+#: data/resources/ui/window.ui:62
+msgid "Wallpapers"
+msgstr "Duvar Kağıtları"
+
+#: data/resources/ui/window.ui:76
+msgid "Downloads"
+msgstr "İndirilenler"
+
 #: data/resources/ui/preferences.ui:9 data/resources/ui/preferences.ui:21
 msgid "General"
 msgstr "Genel"
@@ -124,31 +135,16 @@ msgstr "Kişiler"
 
 #: src/application.rs:174
 msgid "translator-credits"
-msgstr "Sabri Ünal <libreajans@gmail.com>"
+msgstr "Sabri Ünal <yakushabb@gmail.com>"
 
-#: src/window.rs:214
-msgid "Downloading your new wallpaper 🙂"
-msgstr "Yeni duvar kağıdınız indiriliyor 🙂"
-
-#: src/window.rs:234
+#: src/window.rs:195 src/window.rs:354
 msgid "Enjoy 🤘"
 msgstr "Tadını çıkarın 🤘"
 
-#: src/window.rs:242 src/window.rs:249
+#: src/window.rs:203 src/window.rs:210 src/window.rs:362 src/window.rs:369
 msgid "Something went wrong"
 msgstr "Bir şeyler yanlış gitti"
 
-#~ msgid "Small correction: window refresh after category selection"
-#~ msgstr "Küçük düzeltme: kategori seçiminden sonra pencere yenileme"
-
-#~ msgid ""
-#~ "Added preferences window and the ability to choose a wallpaper category"
-#~ msgstr ""
-#~ "Tercihler penceresi ve duvar kağıdı kategorisi seçme yeteneği eklendi"
-
-#~ msgid "Removed flatpak d-bus access, uses portals instead"
-#~ msgstr ""
-#~ "Flatpak d-bus erişimi kaldırıldı, bunun yerine portallar kullanılıyor"
-
-#~ msgid "First release! Supports only gnome now"
-#~ msgstr "İlk sürüm! Şimdilik sadece GNOME'u destekliyor"
+#: src/window.rs:336
+msgid "Downloading your new wallpaper 🙂"
+msgstr "Yeni duvar kağıdınız indiriliyor 🙂"
