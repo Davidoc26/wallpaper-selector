@@ -9,12 +9,6 @@
   <description>
     <p>Simple application to download and set wallpapers from wallhaven</p>
   </description>
-  <keywords>
-    <keyword>wallpapers</keyword>
-  </keywords>
-  <categories>
-    <category>Utility</category>
-  </categories>
   <screenshots>
     <screenshot type="default">
       <image>https://raw.githubusercontent.com/Davidoc26/wallpaper-selector/main/data/resources/screenshots/screenshot1.png</image>
