@@ -1,7 +1,7 @@
 project(
   'wallpaper-selector',
   'rust',
-  version: '0.3.5',
+  version: '0.3.6',
   meson_version: '>= 0.59',
   license: ['GPL-3.0'],
 )
