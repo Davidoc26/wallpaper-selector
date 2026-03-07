@@ -15,6 +15,7 @@ use crate::api::wallhaven::response::ThumbType;
 const IMAGE_PER_PAGE: u16 = 24;
 const MAX_IMAGE_COUNT: u16 = IMAGE_PER_PAGE * 15;
 
+#[derive(Debug)]
 pub struct Wallhaven {
     client: Arc<Client>,
     page: Arc<Mutex<u32>>,
