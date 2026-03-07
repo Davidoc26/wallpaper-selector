@@ -1,4 +1,4 @@
-use crate::api::wallhaven::client::{Category, Client};
+use crate::api::wallhaven::client::{Category, Client, SearchOptions, Sorting};
 use crate::application::WallpaperSelectorApplication;
 use crate::config::{APP_ID, PROFILE};
 use crate::helpers::set_wallpaper;
@@ -52,6 +52,8 @@ mod imp {
         pub wallpapers_box: TemplateChild<gtk::Box>,
         #[template_child]
         pub stack: TemplateChild<adw::ViewStack>,
+        #[template_child]
+        pub wallpapers_sorting: TemplateChild<gtk::DropDown>,
         pub downloads_model: ListStore,
         pub settings: gio::Settings,
         pub is_loading: AtomicBool,
@@ -70,6 +72,7 @@ mod imp {
                 wallpapers_box: Default::default(),
                 downloads_model: ListStore::new::<ImageData>(),
                 stack: Default::default(),
+                wallpapers_sorting: Default::default(),
                 settings: gio::Settings::new(APP_ID),
                 is_loading: AtomicBool::new(false),
                 downloads_loaded: Cell::new(false),
@@ -155,14 +158,31 @@ impl WallpaperSelectorWindow {
         }
 
         self.imp().is_loading.store(true, Ordering::Relaxed);
+        self.lock_sorting_dropdown();
         let category = self.current_category();
+        let sorting = self.current_sorting();
         RUNTIME.spawn(async move {
-            provider.load_images(&sender, category).await;
+            let search_options = SearchOptions::default().category(category).sorting(sorting);
+            provider.load_images(&sender, search_options).await;
             sender
                 .send(ProviderMessage::ImagesLoaded)
                 .await
                 .expect("Failed to send ProviderMessage::Loading");
         });
+    }
+
+    pub fn lock_sorting_dropdown(&self) {
+        self.imp().wallpapers_sorting.set_sensitive(false);
+    }
+
+    pub fn unlock_sorting_dropdown(&self) {
+        self.imp().wallpapers_sorting.set_sensitive(true);
+    }
+
+    pub fn set_sorting(&self) {
+        self.imp()
+            .wallpapers_sorting
+            .set_selected(self.current_sorting().into());
     }
 
     pub fn build_downloads_page(&self) {
@@ -265,6 +285,7 @@ impl WallpaperSelectorWindow {
                         ProviderMessage::Reset => model.remove_all(),
                         ProviderMessage::ImagesLoaded => {
                         window.imp().is_loading.store(false, Ordering::Relaxed);
+                        window.unlock_sorting_dropdown();
                     }}
                 }
         }));
@@ -281,6 +302,23 @@ impl WallpaperSelectorWindow {
             model.remove_all();
             window.load(Arc::clone(&provider), Arc::clone(&sender));
         }));
+
+        self.imp().wallpapers_sorting.connect_selected_item_notify(
+            clone!(@strong model, @strong self as window , @strong provider, @strong sender=> move|item| {
+                let item = item
+                    .selected_item()
+                    .and_downcast::<gtk::StringObject>()
+                    .unwrap();
+
+                window.imp()
+                    .settings
+                    .set("wallpapers-sorting", item.string().as_str())
+                    .unwrap();
+                provider.reset();
+                model.remove_all();
+                window.load(Arc::clone(&provider), Arc::clone(&sender));
+            }),
+        );
 
         let scrolled_window = ScrolledWindow::builder()
             .hexpand(false)
@@ -301,6 +339,11 @@ impl WallpaperSelectorWindow {
 
     fn current_category(&self) -> Category {
         Category::from(self.imp().settings.int("category"))
+    }
+
+    fn current_sorting(&self) -> Sorting {
+        let val = self.imp().settings.string("wallpapers-sorting");
+        Sorting::from(val.as_str())
     }
 
     fn save_window_size(&self) -> Result<(), glib::BoolError> {

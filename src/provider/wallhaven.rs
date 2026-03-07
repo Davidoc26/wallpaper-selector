@@ -8,7 +8,7 @@ use adw::glib::Bytes;
 use adw::prelude::*;
 use async_channel::Sender;
 
-use crate::api::wallhaven::client::{Category, Client};
+use crate::api::wallhaven::client::{Client, SearchOptions};
 use crate::api::wallhaven::response::ThumbType;
 
 // Load only 15 pages, then clear GridView
@@ -91,13 +91,19 @@ impl Wallhaven {
         format!("{}/{}", std::env::var("XDG_DATA_HOME").unwrap(), id)
     }
 
-    pub async fn load_images(&self, sender: &Sender<ProviderMessage>, category: Category) {
+    pub async fn load_images(
+        &self,
+        sender: &Sender<ProviderMessage>,
+        mut search_options: SearchOptions,
+    ) {
         let page = *self.page.lock().unwrap();
         self.increment_page();
 
+        search_options = search_options.page(page);
+
         let images = self
             .client
-            .search(Some(page), Some(category))
+            .search(search_options)
             .await
             .unwrap()
             .get_images();

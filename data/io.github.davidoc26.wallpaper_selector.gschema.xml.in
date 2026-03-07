@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <schemalist>
-  <schema path="/io/github/davidoc26/wallpaper_selector/" id="@app-id@" gettext-domain="@gettext-package@">
+  <schema path="/io/github/davidoc26/wallpaper_selector/" id="@app-id@"
+    gettext-domain="@gettext-package@">
     <key name="window-width" type="i">
       <default>600</default>
       <summary>Window width</summary>
@@ -16,6 +17,15 @@
     <key name="category" type="i">
       <default>0</default>
       <summary>Wallpapers category</summary>
+    </key>
+    <key name="wallpapers-sorting" type="s">
+      <choices>
+        <choice value="Latest" />
+        <choice value="Toplist" />
+        <choice value="Hot" />
+        <choice value="Random" />
+      </choices>
+      <default>'Latest'</default>
     </key>
   </schema>
 </schemalist>

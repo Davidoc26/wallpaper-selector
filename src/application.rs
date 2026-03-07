@@ -52,6 +52,7 @@ mod imp {
                 .set(window.downgrade())
                 .expect("Window already set.");
 
+            app.main_window().set_sorting();
             app.main_window().build_grid();
             app.main_window().present();
         }
