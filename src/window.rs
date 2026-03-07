@@ -23,12 +23,14 @@ use gtk::{GridView, Image, PositionType, ScrolledWindow, SignalListItemFactory, 
 use std::fs::File;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
+use std::time::Duration;
 
 mod imp {
     use adw::subclass::application_window::AdwApplicationWindowImpl;
     use adw::ToastOverlay;
+    use glib::SourceId;
     use gtk::CompositeTemplate;
-    use std::cell::Cell;
+    use std::cell::{Cell, OnceCell, RefCell};
     use std::sync::atomic::AtomicBool;
 
     use super::*;
@@ -58,6 +60,10 @@ mod imp {
         pub settings: gio::Settings,
         pub is_loading: AtomicBool,
         pub downloads_loaded: Cell<bool>,
+        pub model: RefCell<Option<ListStore>>,
+        pub provider_sender: OnceCell<Arc<Sender<ProviderMessage>>>,
+        pub category_debounce: RefCell<Option<SourceId>>,
+        pub provider: OnceCell<Arc<Wallhaven>>,
     }
 
     impl Default for WallpaperSelectorWindow {
@@ -76,6 +82,10 @@ mod imp {
                 settings: gio::Settings::new(APP_ID),
                 is_loading: AtomicBool::new(false),
                 downloads_loaded: Cell::new(false),
+                model: Default::default(),
+                provider_sender: OnceCell::new(),
+                category_debounce: RefCell::new(None),
+                provider: OnceCell::new(),
             }
         }
     }
@@ -151,7 +161,16 @@ impl WallpaperSelectorWindow {
         Object::builder().property("application", app).build()
     }
 
-    fn load(&self, provider: Arc<Wallhaven>, sender: Arc<Sender<ProviderMessage>>) {
+    fn provider_sender(&self) -> Arc<Sender<ProviderMessage>> {
+        Arc::clone(
+            self.imp()
+                .provider_sender
+                .get()
+                .expect("provider_sender accessed before build_grid was called"),
+        )
+    }
+
+    fn load(&self) {
         // Return if images are loading
         if self.imp().is_loading.load(Ordering::Relaxed) {
             return;
@@ -159,10 +178,19 @@ impl WallpaperSelectorWindow {
 
         self.imp().is_loading.store(true, Ordering::Relaxed);
         self.lock_sorting_dropdown();
-        let category = self.current_category();
+        let category_general = self.is_general_category_enabled();
+        let category_anime = self.is_anime_category_enabled();
+        let category_people = self.is_people_category_enabled();
         let sorting = self.current_sorting();
+        let sender = self.provider_sender();
+        let provider = self.provider();
+
         RUNTIME.spawn(async move {
-            let search_options = SearchOptions::default().category(category).sorting(sorting);
+            let search_options = SearchOptions::default()
+                .sorting(sorting)
+                .category_general(category_general)
+                .category_anime(category_anime)
+                .category_people(category_people);
             provider.load_images(&sender, search_options).await;
             sender
                 .send(ProviderMessage::ImagesLoaded)
@@ -183,6 +211,18 @@ impl WallpaperSelectorWindow {
         self.imp()
             .wallpapers_sorting
             .set_selected(self.current_sorting().into());
+    }
+
+    pub fn is_general_category_enabled(&self) -> bool {
+        self.imp().settings.boolean("category-general")
+    }
+
+    pub fn is_anime_category_enabled(&self) -> bool {
+        self.imp().settings.boolean("category-anime")
+    }
+
+    pub fn is_people_category_enabled(&self) -> bool {
+        self.imp().settings.boolean("category-people")
     }
 
     pub fn build_downloads_page(&self) {
@@ -268,21 +308,52 @@ impl WallpaperSelectorWindow {
         self.imp().downloads_box.append(&scrolled_window);
     }
 
+    pub fn set_model(&self) {
+        *self.imp().model.borrow_mut() = Some(ListStore::new::<ImageData>());
+    }
+
+    pub fn get_model(&self) -> Option<ListStore> {
+        self.imp().model.borrow().clone()
+    }
+
+    pub fn add_image_to_model(&self, image: &ImageData) {
+        if let Some(model) = self.get_model() {
+            model.append(image);
+        }
+    }
+
+    pub fn clear_model(&self) {
+        if let Some(model) = self.get_model() {
+            model.remove_all();
+        }
+    }
+
     pub fn build_grid(&self) {
-        let model = ListStore::new::<ImageData>();
+        self.set_model();
         let client = Client::new(None);
 
         let (sender, receiver) = async_channel::unbounded::<ProviderMessage>();
         let sender = Arc::new(sender);
+        let provider = Arc::new(Wallhaven::new(client));
 
-        spawn_future_local(clone!(@strong self as window, @strong model => async move{
+        self.imp()
+            .provider
+            .set(Arc::clone(&provider))
+            .expect("build_grid must be called only once");
+
+        self.imp()
+            .provider_sender
+            .set(Arc::clone(&sender))
+            .expect("build_grid must be called only once");
+
+        spawn_future_local(clone!(@strong self as window => async move{
             while let Ok(provider_message) = receiver.recv().await {
                 match provider_message {
                     ProviderMessage::Image(path, texture) => {
                         let image_data = ImageData::new(path,texture);
-                        model.append(&image_data);
+                        window.add_image_to_model(&image_data);
                     },
-                        ProviderMessage::Reset => model.remove_all(),
+                        ProviderMessage::Reset => window.clear_model(),
                         ProviderMessage::ImagesLoaded => {
                         window.imp().is_loading.store(false, Ordering::Relaxed);
                         window.unlock_sorting_dropdown();
@@ -290,21 +361,25 @@ impl WallpaperSelectorWindow {
                 }
         }));
 
-        let provider = Arc::new(Wallhaven::new(client));
-        let selection_model = SingleSelection::new(Some(model.clone()));
+        let selection_model = SingleSelection::new(Some(self.get_model().unwrap()));
 
-        let grid_view = self.prepare_grid_view(Arc::clone(&provider), selection_model);
-        self.load(Arc::clone(&provider), Arc::clone(&sender));
+        let grid_view = self.prepare_grid_view(selection_model);
+        self.load();
 
         // Reset grid on category change (needs refactoring)
-        self.imp().settings.connect_changed(Some("category"), clone!(@strong model, @strong self as window, @strong provider, @strong sender =>  move|_, _| {
-            provider.reset();
-            model.remove_all();
-            window.load(Arc::clone(&provider), Arc::clone(&sender));
-        }));
+        self.imp().settings.connect_changed(
+            Some("category"),
+            clone!(@strong self as window =>  move|_, _| {
+                window.provider().reset();
+                window.clear_model();
+                window.load();
+            }),
+        );
+
+        self.connect_category_filters_change();
 
         self.imp().wallpapers_sorting.connect_selected_item_notify(
-            clone!(@strong model, @strong self as window , @strong provider, @strong sender=> move|item| {
+            clone!(@strong self as window => move|item| {
                 let item = item
                     .selected_item()
                     .and_downcast::<gtk::StringObject>()
@@ -314,9 +389,9 @@ impl WallpaperSelectorWindow {
                     .settings
                     .set("wallpapers-sorting", item.string().as_str())
                     .unwrap();
-                provider.reset();
-                model.remove_all();
-                window.load(Arc::clone(&provider), Arc::clone(&sender));
+                window.provider().reset();
+                window.clear_model();
+                window.load();
             }),
         );
 
@@ -326,19 +401,42 @@ impl WallpaperSelectorWindow {
             .child(&grid_view)
             .build();
 
-        scrolled_window.connect_edge_reached(
-            clone!(@strong provider, @strong sender, @strong self as window => move|_,position|{
-                if let PositionType::Bottom = position {
-                    window.load(Arc::clone(&provider), Arc::clone(&sender));
-                }
-            }),
-        );
+        scrolled_window.connect_edge_reached(clone!(@strong self as window => move|_,position|{
+            if let PositionType::Bottom = position {
+                window.load();
+            }
+        }));
 
         self.imp().wallpapers_box.append(&scrolled_window);
     }
 
-    fn current_category(&self) -> Category {
-        Category::from(self.imp().settings.int("category"))
+    fn connect_category_filters_change(&self) {
+        for key in ["category-general", "category-anime", "category-people"] {
+            self.imp().settings.connect_changed(
+                Some(key),
+                clone!(@strong self as window => move |_,_|{
+                    window.schedule_reload();
+                }),
+            );
+        }
+    }
+
+    fn schedule_reload(&self) {
+        if let Some(source_id) = self.imp().category_debounce.borrow_mut().take() {
+            source_id.remove();
+        }
+
+        let source_id = glib::timeout_add_local_once(
+            Duration::from_millis(1500),
+            clone!(@strong self as window, => move || {
+                window.imp().category_debounce.borrow_mut().take();
+                window.provider().reset();
+                window.clear_model();
+                window.load();
+            }),
+        );
+
+        *self.imp().category_debounce.borrow_mut() = Some(source_id);
     }
 
     fn current_sorting(&self) -> Sorting {
@@ -360,13 +458,22 @@ impl WallpaperSelectorWindow {
         Ok(())
     }
 
-    fn prepare_grid_view(&self, provider: Arc<Wallhaven>, model: SingleSelection) -> GridView {
+    fn provider(&self) -> Arc<Wallhaven> {
+        Arc::clone(
+            self.imp()
+                .provider
+                .get()
+                .expect("provider accessed before build_grid was called"),
+        )
+    }
+
+    fn prepare_grid_view(&self, model: SingleSelection) -> GridView {
         let grid_view: GridView = GridView::builder()
             .model(&model)
             .factory(&self.prepare_factory())
             .build();
 
-        grid_view.connect_activate(clone!(@strong self as window, @strong provider => move|grid_view, pos| {
+        grid_view.connect_activate(clone!(@strong self as window => move|grid_view, pos| {
             let model = grid_view.model().unwrap();
             let image_data = model.item(pos)
                 .unwrap()
@@ -376,7 +483,9 @@ impl WallpaperSelectorWindow {
             let url = image_data.property::<String>("path");
 
             let (sender, receiver) = async_channel::unbounded();
+            let provider = window.provider();
             window.send_toast(&gettext("Downloading your new wallpaper 🙂"), Some(2));
+
             RUNTIME.spawn(clone!(@strong provider => async move{
                 let path = provider.download_wallpaper(url.to_string()).await;
                 sender.send(path).await.unwrap();

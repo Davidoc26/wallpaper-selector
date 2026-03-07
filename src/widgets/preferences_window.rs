@@ -8,7 +8,7 @@ mod imp {
     use adw::gio::Settings;
     use adw::glib;
     use adw::subclass::prelude::*;
-    use adw::{gio, ComboRow};
+    use adw::{gio, SwitchRow};
     use gtk::CompositeTemplate;
 
     use crate::config::APP_ID;
@@ -19,7 +19,11 @@ mod imp {
     pub struct PreferencesWindow {
         pub settings: gio::Settings,
         #[template_child]
-        pub category_selector: TemplateChild<ComboRow>,
+        pub category_general: TemplateChild<SwitchRow>,
+        #[template_child]
+        pub category_anime: TemplateChild<SwitchRow>,
+        #[template_child]
+        pub category_people: TemplateChild<SwitchRow>,
     }
 
     #[glib::object_subclass]
@@ -31,7 +35,9 @@ mod imp {
         fn new() -> Self {
             Self {
                 settings: Settings::new(APP_ID),
-                category_selector: TemplateChild::default(),
+                category_general: TemplateChild::default(),
+                category_anime: TemplateChild::default(),
+                category_people: TemplateChild::default(),
             }
         }
 
@@ -71,7 +77,17 @@ impl PreferencesWindow {
     pub fn bind_settings(&self) {
         self.imp()
             .settings
-            .bind("category", &*self.imp().category_selector, "selected")
+            .bind("category-general", &*self.imp().category_general, "active")
+            .flags(SettingsBindFlags::DEFAULT)
+            .build();
+        self.imp()
+            .settings
+            .bind("category-anime", &*self.imp().category_anime, "active")
+            .flags(SettingsBindFlags::DEFAULT)
+            .build();
+        self.imp()
+            .settings
+            .bind("category-people", &*self.imp().category_people, "active")
             .flags(SettingsBindFlags::DEFAULT)
             .build();
     }

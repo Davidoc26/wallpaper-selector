@@ -5,6 +5,7 @@ pub mod client {
 
     use crate::api::wallhaven::response::{Image, Response, ThumbType};
 
+    #[derive(Debug)]
     pub struct Client {
         client: reqwest::Client,
     }
@@ -34,9 +35,14 @@ pub mod client {
             if let Some(page) = query.page {
                 params.push(format!("page={}", page));
             }
-            if let Some(category) = query.category {
-                params.push(format!("categories={}", category.value()));
-            }
+
+            params.push(format!(
+                "categories={}{}{}",
+                query.category_general.unwrap_or(false) as u8,
+                query.category_anime.unwrap_or(false) as u8,
+                query.category_people.unwrap_or(false) as u8,
+            ));
+
             if let Some(sorting) = query.sorting {
                 params.push(format!("sorting={}", sorting.value()));
             }
@@ -68,8 +74,10 @@ pub mod client {
     #[derive(Default)]
     pub struct SearchOptions {
         pub page: Option<u32>,
-        pub category: Option<Category>,
         pub sorting: Option<Sorting>,
+        pub category_general: Option<bool>,
+        pub category_anime: Option<bool>,
+        pub category_people: Option<bool>,
     }
 
     impl SearchOptions {
@@ -77,13 +85,24 @@ pub mod client {
             self.page = Some(page);
             self
         }
-        pub fn category(mut self, category: Category) -> Self {
-            self.category = Some(category);
-            self
-        }
 
         pub fn sorting(mut self, sorting: Sorting) -> Self {
             self.sorting = Some(sorting);
+            self
+        }
+
+        pub fn category_general(mut self, is_active: bool) -> Self {
+            self.category_general = Some(is_active);
+            self
+        }
+
+        pub fn category_anime(mut self, is_active: bool) -> Self {
+            self.category_anime = Some(is_active);
+            self
+        }
+
+        pub fn category_people(mut self, is_active: bool) -> Self {
+            self.category_people = Some(is_active);
             self
         }
     }

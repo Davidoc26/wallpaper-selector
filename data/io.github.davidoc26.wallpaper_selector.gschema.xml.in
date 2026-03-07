@@ -27,5 +27,14 @@
       </choices>
       <default>'Latest'</default>
     </key>
+    <key name="category-general" type="b">
+      <default>true</default>
+    </key>
+    <key name="category-anime" type="b">
+      <default>true</default>
+    </key>
+    <key name="category-people" type="b">
+      <default>false</default>
+    </key>
   </schema>
 </schemalist>
