@@ -16,16 +16,8 @@ pub mod client {
             }
         }
 
-        pub async fn search(
-            &self,
-            page: Option<u32>,
-            category: Option<Category>,
-        ) -> Result<Response, Box<dyn Error>> {
-            let url = format!(
-                "https://wallhaven.cc/api/v1/search?page={}&categories={}",
-                page.unwrap_or(1),
-                category.unwrap_or_default().value()
-            );
+        pub async fn search(&self, options: SearchOptions) -> Result<Response, Box<dyn Error>> {
+            let url = self.build_search_url(options);
 
             Ok(self
                 .client
@@ -34,6 +26,24 @@ pub mod client {
                 .await?
                 .json::<Response>()
                 .await?)
+        }
+
+        fn build_search_url(&self, query: SearchOptions) -> String {
+            let mut params = Vec::new();
+
+            if let Some(page) = query.page {
+                params.push(format!("page={}", page));
+            }
+            if let Some(category) = query.category {
+                params.push(format!("categories={}", category.value()));
+            }
+            if let Some(sorting) = query.sorting {
+                params.push(format!("sorting={}", sorting.value()));
+            }
+
+            let query_string = format!("?{}", params.join("&"));
+
+            format!("https://wallhaven.cc/api/v1/search{}", query_string)
         }
 
         pub async fn image_thumb(
@@ -52,6 +62,29 @@ pub mod client {
 
         pub async fn get_bytes(&self, path: &str) -> Result<Bytes, reqwest::Error> {
             self.client.get(path).send().await?.bytes().await
+        }
+    }
+
+    #[derive(Default)]
+    pub struct SearchOptions {
+        pub page: Option<u32>,
+        pub category: Option<Category>,
+        pub sorting: Option<Sorting>,
+    }
+
+    impl SearchOptions {
+        pub fn page(mut self, page: u32) -> Self {
+            self.page = Some(page);
+            self
+        }
+        pub fn category(mut self, category: Category) -> Self {
+            self.category = Some(category);
+            self
+        }
+
+        pub fn sorting(mut self, sorting: Sorting) -> Self {
+            self.sorting = Some(sorting);
+            self
         }
     }
 
@@ -80,6 +113,48 @@ pub mod client {
                 1 => Category::Anime,
                 2 => Category::People,
                 _ => Self::default(),
+            }
+        }
+    }
+
+    #[derive(Default)]
+    pub enum Sorting {
+        #[default]
+        Latest,
+        Hot,
+        Toplist,
+        Random,
+    }
+
+    impl Sorting {
+        pub fn value(&self) -> &'static str {
+            match self {
+                Sorting::Latest => "date_added",
+                Sorting::Hot => "hot",
+                Sorting::Toplist => "toplist",
+                Sorting::Random => "random",
+            }
+        }
+    }
+
+    impl From<&str> for Sorting {
+        fn from(s: &str) -> Self {
+            match s {
+                "All" => Sorting::Latest,
+                "Hot" => Sorting::Hot,
+                "Toplist" => Sorting::Toplist,
+                "Random" => Sorting::Random,
+                _ => Sorting::Latest,
+            }
+        }
+    }
+    impl From<Sorting> for u32 {
+        fn from(val: Sorting) -> Self {
+            match val {
+                Sorting::Latest => 0,
+                Sorting::Toplist => 1,
+                Sorting::Hot => 2,
+                Sorting::Random => 3,
             }
         }
     }
