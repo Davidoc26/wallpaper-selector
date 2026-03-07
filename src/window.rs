@@ -1,4 +1,4 @@
-use crate::api::wallhaven::client::{Category, Client, SearchOptions, Sorting};
+use crate::api::wallhaven::client::{Client, SearchOptions, Sorting};
 use crate::application::WallpaperSelectorApplication;
 use crate::config::{APP_ID, PROFILE};
 use crate::helpers::set_wallpaper;

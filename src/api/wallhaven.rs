@@ -108,35 +108,6 @@ pub mod client {
     }
 
     #[derive(Default)]
-    pub enum Category {
-        #[default]
-        General,
-        Anime,
-        People,
-    }
-
-    impl Category {
-        pub fn value(&self) -> &str {
-            match self {
-                Category::General => "100",
-                Category::Anime => "010",
-                Category::People => "001",
-            }
-        }
-    }
-
-    impl From<i32> for Category {
-        fn from(pos: i32) -> Self {
-            match pos {
-                0 => Category::General,
-                1 => Category::Anime,
-                2 => Category::People,
-                _ => Self::default(),
-            }
-        }
-    }
-
-    #[derive(Default)]
     pub enum Sorting {
         #[default]
         Latest,
