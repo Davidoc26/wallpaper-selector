@@ -1,11 +1,12 @@
 use adw::glib::MainContext;
+use adw::prelude::*;
 use gettextrs::gettext;
 use glib::clone;
-use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 use gtk::{gdk, gio, glib};
 use log::{debug, info};
 use std::fs::File;
+use std::os::fd::AsFd;
 
 use crate::config::{APP_ID, PKGDATADIR, PROFILE, VERSION};
 use crate::widgets::PreferencesWindow;
@@ -77,7 +78,7 @@ mod imp {
 
 glib::wrapper! {
     pub struct WallpaperSelectorApplication(ObjectSubclass<imp::WallpaperSelectorApplication>)
-        @extends gio::Application, gtk::Application,
+        @extends gio::Application, gtk::Application, adw::Application,
         @implements gio::ActionMap, gio::ActionGroup;
 }
 
@@ -135,7 +136,7 @@ impl WallpaperSelectorApplication {
         let path = std::env::var("XDG_DATA_HOME").unwrap();
         let directory = File::open(&path).unwrap();
         ashpd::desktop::open_uri::OpenDirectoryRequest::default()
-            .send(&directory)
+            .send(&directory.as_fd())
             .await
             .unwrap();
     }
