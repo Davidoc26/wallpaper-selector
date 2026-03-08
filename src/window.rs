@@ -432,6 +432,7 @@ impl WallpaperSelectorWindow {
         let source_id = glib::timeout_add_local_once(
             Duration::from_millis(1500),
             clone!(@strong self as window, => move || {
+                window.send_toast(&gettext("Applying changes"), Some(3));
                 window.imp().category_debounce.borrow_mut().take();
                 window.provider().reset();
                 window.clear_model();
