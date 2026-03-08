@@ -60,7 +60,7 @@ mod imp {
         pub settings: gio::Settings,
         pub is_loading: AtomicBool,
         pub downloads_loaded: Cell<bool>,
-        pub model: RefCell<Option<ListStore>>,
+        pub model: OnceCell<ListStore>,
         pub provider_sender: OnceCell<Arc<Sender<ProviderMessage>>>,
         pub category_debounce: RefCell<Option<SourceId>>,
         pub provider: OnceCell<Arc<Wallhaven>>,
@@ -309,23 +309,26 @@ impl WallpaperSelectorWindow {
     }
 
     pub fn set_model(&self) {
-        *self.imp().model.borrow_mut() = Some(ListStore::new::<ImageData>());
+        self.imp()
+            .model
+            .set(ListStore::new::<ImageData>())
+            .expect("set_model can only be called once");
     }
 
-    pub fn get_model(&self) -> Option<ListStore> {
-        self.imp().model.borrow().clone()
+    pub fn get_model(&self) -> ListStore {
+        self.imp()
+            .model
+            .get()
+            .expect("get_model called before model initialization")
+            .clone()
     }
 
     pub fn add_image_to_model(&self, image: &ImageData) {
-        if let Some(model) = self.get_model() {
-            model.append(image);
-        }
+        self.get_model().append(image);
     }
 
     pub fn clear_model(&self) {
-        if let Some(model) = self.get_model() {
-            model.remove_all();
-        }
+        self.get_model().remove_all();
     }
 
     pub fn build_grid(&self) {
@@ -361,7 +364,7 @@ impl WallpaperSelectorWindow {
                 }
         }));
 
-        let selection_model = SingleSelection::new(Some(self.get_model().unwrap()));
+        let selection_model = SingleSelection::new(Some(self.get_model()));
 
         let grid_view = self.prepare_grid_view(selection_model);
         self.load();
