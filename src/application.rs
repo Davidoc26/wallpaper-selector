@@ -100,35 +100,55 @@ impl WallpaperSelectorApplication {
     fn setup_gactions(&self) {
         // Quit
         let action_quit = gio::SimpleAction::new("quit", None);
-        action_quit.connect_activate(clone!(@weak self as app => move |_, _| {
-            // This is needed to trigger the delete event and saving the window state
-            app.main_window().close();
-            app.quit();
-        }));
+        action_quit.connect_activate(clone!(
+            #[weak(rename_to = app)]
+            self,
+            move |_, _| {
+                // This is needed to trigger the delete event and saving the window state
+                app.main_window().close();
+                app.quit();
+            }
+        ));
         self.add_action(&action_quit);
 
         // About
         let action_about = gio::SimpleAction::new("about", None);
-        action_about.connect_activate(clone!(@weak self as app => move |_, _| {
-            app.show_about_dialog();
-        }));
+        action_about.connect_activate(clone!(
+            #[weak(rename_to = app)]
+            self,
+            move |_, _| {
+                app.show_about_dialog();
+            }
+        ));
         self.add_action(&action_about);
 
         // Preferences
         let action_preferences = gio::SimpleAction::new("preferences", None);
-        action_preferences.connect_activate(clone!(@weak self as app => move |_,_|{
-            app.show_preferences_window();
-        }));
+        action_preferences.connect_activate(clone!(
+            #[weak(rename_to = app)]
+            self,
+            move |_, _| {
+                app.show_preferences_window();
+            }
+        ));
         self.add_action(&action_preferences);
 
         // Wallpapers folder
         let action_open_wallpapers_folder = gio::SimpleAction::new("folder", None);
-        action_open_wallpapers_folder.connect_activate(clone!(@weak self as app => move |_,_| {
-            let context = MainContext::default();
-            context.spawn_local(clone!(@weak app => async move{
-                app.open_wallpapers_folder().await;
-            }));
-        }));
+        action_open_wallpapers_folder.connect_activate(clone!(
+            #[weak(rename_to = app)]
+            self,
+            move |_, _| {
+                let context = MainContext::default();
+                context.spawn_local(clone!(
+                    #[weak]
+                    app,
+                    async move {
+                        app.open_wallpapers_folder().await;
+                    }
+                ));
+            }
+        ));
         self.add_action(&action_open_wallpapers_folder);
     }
 
