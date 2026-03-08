@@ -116,16 +116,20 @@ mod imp {
                 obj.add_css_class("devel");
             }
 
-            self.stack
-                .connect_visible_child_notify(clone!(@weak self as window => move |stack| {
-                if !window.downloads_loaded.get() {
-                    if let Some(child) = stack.visible_child() {
-                    if stack.page(&child) == window.downloads_page.get() {
-                        window.obj().build_downloads_page();
-                            window.downloads_loaded.set(true);
+            self.stack.connect_visible_child_notify(clone!(
+                #[weak(rename_to = window)]
+                self,
+                move |stack| {
+                    if !window.downloads_loaded.get() {
+                        if let Some(child) = stack.visible_child() {
+                            if stack.page(&child) == window.downloads_page.get() {
+                                window.obj().build_downloads_page();
+                                window.downloads_loaded.set(true);
+                            }
                         }
+                    }
                 }
-                }}));
+            ));
 
             // Load latest window state
             obj.load_window_size();
@@ -238,44 +242,57 @@ impl WallpaperSelectorWindow {
             .child(&grid_view)
             .build();
 
-        grid_view.connect_activate(clone!(@strong self as window => move|grid_view, pos| {
-            let model = grid_view.model().unwrap();
-            let image_data = model.item(pos)
-                .unwrap()
-                .downcast::<ImageData>()
-                .unwrap();
+        grid_view.connect_activate(clone!(
+            #[strong(rename_to = window)]
+            self,
+            move |grid_view, pos| {
+                let model = grid_view.model().unwrap();
+                let image_data = model.item(pos).unwrap().downcast::<ImageData>().unwrap();
 
-            spawn_future_local(clone!(@strong window => async move{
-                            let path = image_data.property::<String>("path");
-                            let file = File::open(path).unwrap();
-                            let root = window.native().unwrap();
-                            let identifier = WindowIdentifier::from_native(&root).await;
-                            let result = set_wallpaper(identifier, &file).await;
+                spawn_future_local(clone!(
+                    #[strong]
+                    window,
+                    async move {
+                        let path = image_data.property::<String>("path");
+                        let file = File::open(path).unwrap();
+                        let root = window.native().unwrap();
+                        let identifier = WindowIdentifier::from_native(&root).await;
+                        let result = set_wallpaper(identifier, &file).await;
 
-                            match result {
-                                Ok(_) => window.send_toast(&gettext("Enjoy 🤘"), Some(3)),
-                                Err(e) => {
-                                    match e {
-                                        ashpd::Error::Response(e) => {
-                                            match e {
-                                                ResponseError::Cancelled => {}
-                                                ResponseError::Other => {
-                                                    if OpenDirectoryRequest::default().send(&file.as_fd()).await.is_err(){
-                                                        window.send_toast(&gettext("Something went wrong"), Some(3));
-                                                    }
-                                                },
-                                            }
-                                        }
-                                        _ => {
-                                            if OpenDirectoryRequest::default().send(&file.as_fd()).await.is_err(){
-                                                window.send_toast(&gettext("Something went wrong"), Some(3));
-                                            }
+                        match result {
+                            Ok(_) => window.send_toast(&gettext("Enjoy 🤘"), Some(3)),
+                            Err(e) => match e {
+                                ashpd::Error::Response(e) => match e {
+                                    ResponseError::Cancelled => {}
+                                    ResponseError::Other => {
+                                        if OpenDirectoryRequest::default()
+                                            .send(&file.as_fd())
+                                            .await
+                                            .is_err()
+                                        {
+                                            window.send_toast(
+                                                &gettext("Something went wrong"),
+                                                Some(3),
+                                            );
                                         }
                                     }
                                 },
-                            }
-            }));
-        }));
+                                _ => {
+                                    if OpenDirectoryRequest::default()
+                                        .send(&file.as_fd())
+                                        .await
+                                        .is_err()
+                                    {
+                                        window
+                                            .send_toast(&gettext("Something went wrong"), Some(3));
+                                    }
+                                }
+                            },
+                        }
+                    }
+                ));
+            }
+        ));
 
         let (sender, receiver) = async_channel::unbounded::<std::path::PathBuf>();
 
@@ -296,15 +313,22 @@ impl WallpaperSelectorWindow {
             }
         });
 
-        spawn_future_local(clone!(@strong self as window => async move {
-            while let Ok(path) = receiver.recv().await {
-                if let Ok(texture) = Pixbuf::from_file_at_scale(&path, 200, 200, true) {
-                    let image_data = ImageData::new(path.to_string_lossy().to_string(), Texture::for_pixbuf(&texture));
-                    window.imp().downloads_model.append(&image_data);
-                    timeout_future_seconds(0).await;
+        spawn_future_local(clone!(
+            #[strong(rename_to = window)]
+            self,
+            async move {
+                while let Ok(path) = receiver.recv().await {
+                    if let Ok(texture) = Pixbuf::from_file_at_scale(&path, 200, 200, true) {
+                        let image_data = ImageData::new(
+                            path.to_string_lossy().to_string(),
+                            Texture::for_pixbuf(&texture),
+                        );
+                        window.imp().downloads_model.append(&image_data);
+                        timeout_future_seconds(0).await;
+                    }
                 }
             }
-        }));
+        ));
 
         self.imp().downloads_box.append(&scrolled_window);
     }
@@ -350,20 +374,25 @@ impl WallpaperSelectorWindow {
             .set(Arc::clone(&sender))
             .expect("build_grid must be called only once");
 
-        spawn_future_local(clone!(@strong self as window => async move{
-            while let Ok(provider_message) = receiver.recv().await {
-                match provider_message {
-                    ProviderMessage::Image(path, texture) => {
-                        let image_data = ImageData::new(path,texture);
-                        window.add_image_to_model(&image_data);
-                    },
+        spawn_future_local(clone!(
+            #[strong(rename_to = window)]
+            self,
+            async move {
+                while let Ok(provider_message) = receiver.recv().await {
+                    match provider_message {
+                        ProviderMessage::Image(path, texture) => {
+                            let image_data = ImageData::new(path, texture);
+                            window.add_image_to_model(&image_data);
+                        }
                         ProviderMessage::Reset => window.clear_model(),
                         ProviderMessage::ImagesLoaded => {
-                        window.imp().is_loading.store(false, Ordering::Relaxed);
-                        window.unlock_sorting_dropdown();
-                    }}
+                            window.imp().is_loading.store(false, Ordering::Relaxed);
+                            window.unlock_sorting_dropdown();
+                        }
+                    }
                 }
-        }));
+            }
+        ));
 
         let selection_model = SingleSelection::new(Some(self.get_model()));
 
@@ -373,31 +402,40 @@ impl WallpaperSelectorWindow {
         // Reset grid on category change (needs refactoring)
         self.imp().settings.connect_changed(
             Some("category"),
-            clone!(@strong self as window =>  move|_, _| {
-                window.provider().reset();
-                window.clear_model();
-                window.load();
-            }),
+            clone!(
+                #[strong(rename_to = window)]
+                self,
+                move |_, _| {
+                    window.provider().reset();
+                    window.clear_model();
+                    window.load();
+                }
+            ),
         );
 
         self.connect_category_filters_change();
 
-        self.imp().wallpapers_sorting.connect_selected_item_notify(
-            clone!(@strong self as window => move|item| {
-                let item = item
-                    .selected_item()
-                    .and_downcast::<gtk::StringObject>()
-                    .unwrap();
+        self.imp()
+            .wallpapers_sorting
+            .connect_selected_item_notify(clone!(
+                #[strong(rename_to = window)]
+                self,
+                move |item| {
+                    let item = item
+                        .selected_item()
+                        .and_downcast::<gtk::StringObject>()
+                        .unwrap();
 
-                window.imp()
-                    .settings
-                    .set("wallpapers-sorting", item.string().as_str())
-                    .unwrap();
-                window.provider().reset();
-                window.clear_model();
-                window.load();
-            }),
-        );
+                    window
+                        .imp()
+                        .settings
+                        .set("wallpapers-sorting", item.string().as_str())
+                        .unwrap();
+                    window.provider().reset();
+                    window.clear_model();
+                    window.load();
+                }
+            ));
 
         let scrolled_window = ScrolledWindow::builder()
             .hexpand(false)
@@ -405,11 +443,15 @@ impl WallpaperSelectorWindow {
             .child(&grid_view)
             .build();
 
-        scrolled_window.connect_edge_reached(clone!(@strong self as window => move|_,position|{
-            if let PositionType::Bottom = position {
-                window.load();
+        scrolled_window.connect_edge_reached(clone!(
+            #[strong(rename_to = window)]
+            self,
+            move |_, position| {
+                if let PositionType::Bottom = position {
+                    window.load();
+                }
             }
-        }));
+        ));
 
         self.imp().wallpapers_box.append(&scrolled_window);
     }
@@ -418,9 +460,13 @@ impl WallpaperSelectorWindow {
         for key in ["category-general", "category-anime", "category-people"] {
             self.imp().settings.connect_changed(
                 Some(key),
-                clone!(@strong self as window => move |_,_|{
-                    window.schedule_reload();
-                }),
+                clone!(
+                    #[strong(rename_to = window)]
+                    self,
+                    move |_, _| {
+                        window.schedule_reload();
+                    }
+                ),
             );
         }
     }
@@ -432,13 +478,17 @@ impl WallpaperSelectorWindow {
 
         let source_id = glib::timeout_add_local_once(
             Duration::from_millis(1500),
-            clone!(@strong self as window, => move || {
-                window.send_toast(&gettext("Applying changes"), Some(3));
-                window.imp().category_debounce.borrow_mut().take();
-                window.provider().reset();
-                window.clear_model();
-                window.load();
-            }),
+            clone!(
+                #[strong(rename_to = window)]
+                self,
+                move || {
+                    window.send_toast(&gettext("Applying changes"), Some(3));
+                    window.imp().category_debounce.borrow_mut().take();
+                    window.provider().reset();
+                    window.clear_model();
+                    window.load();
+                }
+            ),
         );
 
         *self.imp().category_debounce.borrow_mut() = Some(source_id);
@@ -478,65 +528,87 @@ impl WallpaperSelectorWindow {
             .factory(&self.prepare_factory())
             .build();
 
-        grid_view.connect_activate(clone!(@strong self as window => move|grid_view, pos| {
-            let model = grid_view.model().unwrap();
-            let image_data = model.item(pos)
-                .unwrap()
-                .downcast::<ImageData>()
-                .unwrap();
+        grid_view.connect_activate(clone!(
+            #[strong(rename_to = window)]
+            self,
+            move |grid_view, pos| {
+                let model = grid_view.model().unwrap();
+                let image_data = model.item(pos).unwrap().downcast::<ImageData>().unwrap();
 
-            let url = image_data.property::<String>("path");
+                let url = image_data.property::<String>("path");
 
-            let (sender, receiver) = async_channel::unbounded();
-            let provider = window.provider();
-            window.send_toast(&gettext("Downloading your new wallpaper 🙂"), Some(2));
+                let (sender, receiver) = async_channel::unbounded();
+                let provider = window.provider();
+                window.send_toast(&gettext("Downloading your new wallpaper 🙂"), Some(2));
 
-            RUNTIME.spawn(clone!(@strong provider => async move{
-                let path = provider.download_wallpaper(url.to_string()).await;
-                sender.send(path).await.unwrap();
-            }));
+                RUNTIME.spawn(clone!(
+                    #[strong]
+                    provider,
+                    async move {
+                        let path = provider.download_wallpaper(url.to_string()).await;
+                        sender.send(path).await.unwrap();
+                    }
+                ));
 
-        spawn_future_local(clone!(@strong window, @strong receiver => async move{
-            while let Ok(message) = receiver.recv().await {
-                match message {
-                    Ok(path) => {
-                        let root = window.native().unwrap();
-                        let identifier = WindowIdentifier::from_native(&root).await;
-                        let file = File::open( & path).unwrap();
-                        let result = set_wallpaper(identifier, &file).await;
-                        if window.imp().downloads_loaded.get() {
-                            window.imp().downloads_model.append(&ImageData::new(path.clone(), Texture::from_filename(&path).unwrap()));
-                        }
-                            match result {
-                                Ok(_) => window.send_toast(&gettext("Enjoy 🤘"), Some(3)),
-                                Err(e) => {
-                                    match e {
-                                        ashpd::Error::Response(e) => {
-                                            match e {
+                spawn_future_local(clone!(
+                    #[strong]
+                    window,
+                    #[strong]
+                    receiver,
+                    async move {
+                        while let Ok(message) = receiver.recv().await {
+                            match message {
+                                Ok(path) => {
+                                    let root = window.native().unwrap();
+                                    let identifier = WindowIdentifier::from_native(&root).await;
+                                    let file = File::open(&path).unwrap();
+                                    let result = set_wallpaper(identifier, &file).await;
+                                    if window.imp().downloads_loaded.get() {
+                                        window.imp().downloads_model.append(&ImageData::new(
+                                            path.clone(),
+                                            Texture::from_filename(&path).unwrap(),
+                                        ));
+                                    }
+                                    match result {
+                                        Ok(_) => window.send_toast(&gettext("Enjoy 🤘"), Some(3)),
+                                        Err(e) => match e {
+                                            ashpd::Error::Response(e) => match e {
                                                 ResponseError::Cancelled => {}
                                                 ResponseError::Other => {
-                                                    if OpenDirectoryRequest::default().send(&file.as_fd()).await.is_err(){
-                                                        window.send_toast(&gettext("Something went wrong"), Some(3));
+                                                    if OpenDirectoryRequest::default()
+                                                        .send(&file.as_fd())
+                                                        .await
+                                                        .is_err()
+                                                    {
+                                                        window.send_toast(
+                                                            &gettext("Something went wrong"),
+                                                            Some(3),
+                                                        );
                                                     }
-                                                },
+                                                }
+                                            },
+                                            _ => {
+                                                if OpenDirectoryRequest::default()
+                                                    .send(&file.as_fd())
+                                                    .await
+                                                    .is_err()
+                                                {
+                                                    window.send_toast(
+                                                        &gettext("Something went wrong"),
+                                                        Some(3),
+                                                    );
+                                                }
                                             }
-                                        }
-                                        _ => {
-                                            if OpenDirectoryRequest::default().send(&file.as_fd()).await.is_err(){
-                                                window.send_toast(&gettext("Something went wrong"), Some(3));
-                                            }
-                                        }
+                                        },
                                     }
-                                },
+                                }
+                                Err(e) => window.send_toast(&e.to_string(), Some(3)),
                             }
-
-                        },
-                        Err(e) => window.send_toast(&e.to_string(), Some(3)),
+                        }
                     }
-                }
-            }));
-
-        }));
+                ));
+            }
+        ));
 
         grid_view
     }
