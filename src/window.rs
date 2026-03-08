@@ -21,6 +21,7 @@ use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 use gtk::{GridView, Image, PositionType, ScrolledWindow, SignalListItemFactory, SingleSelection};
 use std::fs::File;
+use std::os::fd::AsFd;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::time::Duration;
@@ -152,7 +153,7 @@ mod imp {
 
 glib::wrapper! {
     pub struct WallpaperSelectorWindow(ObjectSubclass<imp::WallpaperSelectorWindow>)
-        @extends gtk::Widget, gtk::Window, gtk::ApplicationWindow,
+        @extends gtk::Widget, gtk::Window, adw::ApplicationWindow,
         @implements gio::ActionMap, gio::ActionGroup, gtk::Root;
 }
 
@@ -259,14 +260,14 @@ impl WallpaperSelectorWindow {
                                             match e {
                                                 ResponseError::Cancelled => {}
                                                 ResponseError::Other => {
-                                                    if OpenDirectoryRequest::default().send(&file).await.is_err(){
+                                                    if OpenDirectoryRequest::default().send(&file.as_fd()).await.is_err(){
                                                         window.send_toast(&gettext("Something went wrong"), Some(3));
                                                     }
                                                 },
                                             }
                                         }
                                         _ => {
-                                            if OpenDirectoryRequest::default().send(&file).await.is_err(){
+                                            if OpenDirectoryRequest::default().send(&file.as_fd()).await.is_err(){
                                                 window.send_toast(&gettext("Something went wrong"), Some(3));
                                             }
                                         }
@@ -514,14 +515,14 @@ impl WallpaperSelectorWindow {
                                             match e {
                                                 ResponseError::Cancelled => {}
                                                 ResponseError::Other => {
-                                                    if OpenDirectoryRequest::default().send(&file).await.is_err(){
+                                                    if OpenDirectoryRequest::default().send(&file.as_fd()).await.is_err(){
                                                         window.send_toast(&gettext("Something went wrong"), Some(3));
                                                     }
                                                 },
                                             }
                                         }
                                         _ => {
-                                            if OpenDirectoryRequest::default().send(&file).await.is_err(){
+                                            if OpenDirectoryRequest::default().send(&file.as_fd()).await.is_err(){
                                                 window.send_toast(&gettext("Something went wrong"), Some(3));
                                             }
                                         }
@@ -565,7 +566,7 @@ impl WallpaperSelectorWindow {
                 .unwrap()
                 .downcast::<Image>()
                 .unwrap()
-                .set_from_paintable(Some(&texture));
+                .set_paintable(Some(&texture));
         });
 
         factory
