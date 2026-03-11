@@ -163,9 +163,7 @@ impl WallpaperSelectorApplication {
 
     fn show_preferences_window(&self) {
         let preferences = PreferencesWindow::new();
-        preferences.set_transient_for(Some(&self.main_window()));
-
-        preferences.present();
+        preferences.present(Some(&self.main_window()));
     }
 
     // Sets up keyboard shortcuts

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <template class="PreferencesWindow" parent="AdwPreferencesWindow">
-    <property name="default-width">500</property>
-    <property name="default-height">550</property>
+  <template class="PreferencesDialog" parent="AdwPreferencesDialog">
+    <property name="content-width">500</property>
+    <property name="content-height">550</property>
     <child>
       <object class="AdwPreferencesPage">
         <property name="icon-name">applications-system-symbolic</property>
@@ -27,7 +27,6 @@
             </child>
           </object>
         </child>
-
       </object>
     </child>
   </template>

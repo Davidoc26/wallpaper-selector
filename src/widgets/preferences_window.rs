@@ -28,9 +28,9 @@ mod imp {
 
     #[glib::object_subclass]
     impl ObjectSubclass for PreferencesWindow {
-        const NAME: &'static str = "PreferencesWindow";
+        const NAME: &'static str = "PreferencesDialog";
         type Type = super::PreferencesWindow;
-        type ParentType = adw::PreferencesWindow;
+        type ParentType = adw::PreferencesDialog;
 
         fn new() -> Self {
             Self {
@@ -50,9 +50,9 @@ mod imp {
         }
     }
 
-    impl AdwWindowImpl for PreferencesWindow {}
+    impl AdwDialogImpl for PreferencesWindow {}
 
-    impl PreferencesWindowImpl for PreferencesWindow {}
+    impl PreferencesDialogImpl for PreferencesWindow {}
 
     impl ObjectImpl for PreferencesWindow {}
 
@@ -63,7 +63,7 @@ mod imp {
 
 glib::wrapper! {
     pub struct PreferencesWindow(ObjectSubclass<imp::PreferencesWindow>)
-        @extends gtk::Widget, gtk::Window, adw::Window, adw::PreferencesWindow;
+        @extends gtk::Widget, gtk::Dialog, adw::Dialog, adw::PreferencesDialog;
 }
 
 impl PreferencesWindow {
