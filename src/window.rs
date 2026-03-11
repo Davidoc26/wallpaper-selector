@@ -57,6 +57,8 @@ mod imp {
         pub stack: TemplateChild<adw::ViewStack>,
         #[template_child]
         pub wallpapers_sorting: TemplateChild<gtk::DropDown>,
+        #[template_child]
+        pub spinner: TemplateChild<adw::Spinner>,
         pub downloads_model: ListStore,
         pub settings: gio::Settings,
         pub is_loading: AtomicBool,
@@ -80,6 +82,7 @@ mod imp {
                 downloads_model: ListStore::new::<ImageData>(),
                 stack: Default::default(),
                 wallpapers_sorting: Default::default(),
+                spinner: Default::default(),
                 settings: gio::Settings::new(APP_ID),
                 is_loading: AtomicBool::new(false),
                 downloads_loaded: Cell::new(false),
@@ -189,6 +192,7 @@ impl WallpaperSelectorWindow {
         let sorting = self.current_sorting();
         let sender = self.provider_sender();
         let provider = self.provider();
+        self.imp().spinner.show();
 
         RUNTIME.spawn(async move {
             let search_options = SearchOptions::default()
@@ -202,6 +206,14 @@ impl WallpaperSelectorWindow {
                 .await
                 .expect("Failed to send ProviderMessage::Loading");
         });
+    }
+
+    pub fn show_spinner(&self) {
+        self.imp().spinner.set_visible(true);
+    }
+
+    pub fn hide_spinner(&self) {
+        self.imp().spinner.set_visible(false);
     }
 
     pub fn lock_sorting_dropdown(&self) {
@@ -388,6 +400,7 @@ impl WallpaperSelectorWindow {
                         ProviderMessage::ImagesLoaded => {
                             window.imp().is_loading.store(false, Ordering::Relaxed);
                             window.unlock_sorting_dropdown();
+                            window.hide_spinner();
                         }
                     }
                 }
