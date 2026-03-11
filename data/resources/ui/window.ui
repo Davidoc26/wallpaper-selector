@@ -65,6 +65,15 @@
                     <property name="icon-name">open-menu-symbolic</property>
                   </object>
                 </child>
+                <child type="end">
+                  <object class="AdwSpinner" id="spinner">
+                    <property name="visible">false</property>
+                    <property name="valign">center</property>
+                    <property name="halign">center</property>
+                    <property name="width-request">20</property>
+                    <property name="height-request">20</property>
+                  </object>
+                </child>
               </object>
             </child>
             <child>
