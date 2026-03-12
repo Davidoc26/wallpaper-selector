@@ -17,9 +17,9 @@ use ashpd::WindowIdentifier;
 use async_channel::Sender;
 use gettextrs::gettext;
 use gtk::glib::spawn_future_local;
-use gtk::prelude::*;
 use gtk::subclass::prelude::*;
-use gtk::{GridView, Image, PositionType, ScrolledWindow, SignalListItemFactory, SingleSelection};
+use gtk::{prelude::*, Picture};
+use gtk::{GridView, PositionType, ScrolledWindow, SignalListItemFactory, SingleSelection};
 use std::fs::File;
 use std::os::fd::AsFd;
 use std::sync::atomic::Ordering;
@@ -629,7 +629,7 @@ impl WallpaperSelectorWindow {
     fn prepare_factory(&self) -> SignalListItemFactory {
         let factory = SignalListItemFactory::new();
         factory.connect_setup(|_, list_item| {
-            let image = Image::builder()
+            let image = Picture::builder()
                 .width_request(300)
                 .height_request(300)
                 .build();
@@ -649,7 +649,7 @@ impl WallpaperSelectorWindow {
             list_item
                 .child()
                 .unwrap()
-                .downcast::<Image>()
+                .downcast::<Picture>()
                 .unwrap()
                 .set_paintable(Some(&texture));
         });

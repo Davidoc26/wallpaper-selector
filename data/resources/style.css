@@ -1,0 +1,6 @@
+gridview > child:hover {
+  transition: transform 250ms ease-in-out;
+ 	transform: scale(1.015);
+	padding: 3px;
+}
+
