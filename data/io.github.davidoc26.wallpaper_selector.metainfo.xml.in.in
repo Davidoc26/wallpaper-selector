@@ -21,6 +21,19 @@
   <url type="translate">https://github.com/Davidoc26/wallpaper-selector/tree/main/po</url>
   <content_rating type="oars-1.1" />
   <releases>
+    <release version="0.3.7" date="2026-03-18">
+      <description translate="no">
+      <p>Release 0.3.7</p>
+        <ul>
+          <li>Added wallhaven sorting selection</li>
+          <li>Added an ability to select multiple categories in settings</li>
+          <li>Added spinner on image loading</li>
+          <li>Added image hover scale effect</li>
+          <li>Images can now resize when the window size is changed</li>
+          <li>Modernized settings dialog</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.3.6" date="2026-02-18">
       <description translate="no">
         <p>Updated app icon to fix some issues in COSMIC Desktop</p>
