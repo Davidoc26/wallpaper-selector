@@ -19,7 +19,28 @@
   <url type="bugtracker">https://github.com/davidoc26/wallpaper-selector/issues</url>
   <url type="vcs-browser">https://github.com/davidoc26/wallpaper-selector</url>
   <url type="translate">https://github.com/Davidoc26/wallpaper-selector/tree/main/po</url>
-  <content_rating type="oars-1.1" />
+  <developer id="io.github.davidoc26">
+    <name>David Eritsyan</name>
+  </developer>
+  <update_contact>dav.eritsyan@gmail.com</update_contact>
+  <translation type="gettext">@gettext-package@</translation>
+  <launchable type="desktop-id">@app-id@.desktop</launchable>
+  <content_rating type="oars-1.1">
+    <content_attribute id="violence-cartoon">intense</content_attribute>
+    <content_attribute id="violence-fantasy">intense</content_attribute>
+    <content_attribute id="violence-realistic">moderate</content_attribute>
+    <content_attribute id="violence-bloodshed">moderate</content_attribute>
+    <content_attribute id="violence-slavery">moderate</content_attribute>
+    <content_attribute id="drugs-alcohol">moderate</content_attribute>
+    <content_attribute id="drugs-narcotics">moderate</content_attribute>
+    <content_attribute id="drugs-tobacco">moderate</content_attribute>
+    <content_attribute id="sex-nudity">intense</content_attribute>
+    <content_attribute id="sex-themes">moderate</content_attribute>
+    <content_attribute id="language-profanity">intense</content_attribute>
+    <content_attribute id="language-humor">intense</content_attribute>
+    <content_attribute id="language-discrimination">intense</content_attribute>
+    <content_attribute id="money-advertising">moderate</content_attribute>
+  </content_rating>
   <releases>
     <release version="0.3.7" date="2026-03-18">
       <description translate="no">
@@ -90,11 +111,4 @@
      <kudo>ModernToolkit</kudo>
      <kudo>HiDpiIcon</kudo>
   </kudos>
-  <developer_name>David Eritsyan</developer_name>
-  <developer id="io.github.davidoc26">
-    <name>David Eritsyan</name>
-  </developer>
-  <update_contact>dav.eritsyan@gmail.com</update_contact>
-  <translation type="gettext">@gettext-package@</translation>
-  <launchable type="desktop-id">@app-id@.desktop</launchable>
 </component>
