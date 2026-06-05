@@ -34,11 +34,11 @@
     <content_attribute id="drugs-alcohol">moderate</content_attribute>
     <content_attribute id="drugs-narcotics">moderate</content_attribute>
     <content_attribute id="drugs-tobacco">moderate</content_attribute>
-    <content_attribute id="sex-nudity">intense</content_attribute>
+    <content_attribute id="sex-nudity">moderate</content_attribute>
     <content_attribute id="sex-themes">moderate</content_attribute>
-    <content_attribute id="language-profanity">intense</content_attribute>
-    <content_attribute id="language-humor">intense</content_attribute>
-    <content_attribute id="language-discrimination">intense</content_attribute>
+    <content_attribute id="language-profanity">mild</content_attribute>
+    <content_attribute id="language-humor">mild</content_attribute>
+    <content_attribute id="language-discrimination">mild</content_attribute>
     <content_attribute id="money-advertising">moderate</content_attribute>
   </content_rating>
   <releases>
