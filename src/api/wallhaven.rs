@@ -1,5 +1,5 @@
 pub mod client {
-    use std::error::Error;
+    use std::{error::Error, fmt::Display};
 
     use bytes::Bytes;
 
@@ -107,7 +107,7 @@ pub mod client {
         }
     }
 
-    #[derive(Default)]
+    #[derive(Default, Debug)]
     pub enum Sorting {
         #[default]
         Latest,
@@ -127,6 +127,18 @@ pub mod client {
         }
     }
 
+    impl Display for Sorting {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            let value = match self {
+                Sorting::Latest => "Latest",
+                Sorting::Hot => "Hot",
+                Sorting::Toplist => "Toplist",
+                Sorting::Random => "Random",
+            };
+            write!(f, "{}", value)
+        }
+    }
+
     impl From<&str> for Sorting {
         fn from(s: &str) -> Self {
             match s {
@@ -138,6 +150,7 @@ pub mod client {
             }
         }
     }
+
     impl From<Sorting> for u32 {
         fn from(val: Sorting) -> Self {
             match val {
@@ -145,6 +158,18 @@ pub mod client {
                 Sorting::Toplist => 1,
                 Sorting::Hot => 2,
                 Sorting::Random => 3,
+            }
+        }
+    }
+
+    impl From<u32> for Sorting {
+        fn from(value: u32) -> Self {
+            match value {
+                0 => Sorting::Latest,
+                1 => Sorting::Toplist,
+                2 => Sorting::Hot,
+                3 => Sorting::Random,
+                _ => Sorting::Latest,
             }
         }
     }

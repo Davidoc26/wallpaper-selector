@@ -1,7 +1,7 @@
 {
     "app-id": "io.github.davidoc26.wallpaper_selector.Devel",
     "runtime": "org.gnome.Platform",
-    "runtime-version": "48",
+    "runtime-version": "50",
     "sdk": "org.gnome.Sdk",
     "sdk-extensions": [
         "org.freedesktop.Sdk.Extension.rust-stable"
@@ -25,7 +25,7 @@
             "RUST_LOG": "wallpaper_selector=debug"
         }
     },
-    "cleanup" : [
+    "cleanup": [
         "/include",
         "/lib/pkgconfig",
         "/man",
