@@ -434,15 +434,12 @@ impl WallpaperSelectorWindow {
                 #[strong(rename_to = window)]
                 self,
                 move |item| {
-                    let item = item
-                        .selected_item()
-                        .and_downcast::<gtk::StringObject>()
-                        .unwrap();
-
+                    let item = item.selected();
+                    let sorting_type = Sorting::from(item).to_string();
                     window
                         .imp()
                         .settings
-                        .set("wallpapers-sorting", item.string().as_str())
+                        .set("wallpapers-sorting", sorting_type)
                         .unwrap();
                     window.provider().reset();
                     window.clear_model();
