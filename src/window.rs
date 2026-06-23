@@ -134,6 +134,20 @@ mod imp {
                 }
             ));
 
+            // Toggle wallpapers sorting visibility depending on the active stack page
+            self.stack.connect_visible_child_name_notify(clone!(
+                #[weak(rename_to = window)]
+                self,
+                move |stack| {
+                    let page = stack.visible_child_name().unwrap_or_default();
+                    if page == "downloads" {
+                        window.wallpapers_sorting.set_visible(false);
+                    } else {
+                        window.wallpapers_sorting.set_visible(true);
+                    }
+                }
+            ));
+
             // Load latest window state
             obj.load_window_size();
         }
